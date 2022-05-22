@@ -3,6 +3,8 @@ package todd
 import (
 	"math"
 	"testing"
+
+	"github.com/schwarmco/go-cartesian-product"
 )
 
 const epsilon = 1e-6
@@ -60,6 +62,75 @@ func TestRotate(t *testing.T) {
 		got := *m.TransformPoint(&tt.p)
 		if Distance(&got, &tt.want) > epsilon {
 			t.Errorf("Got %v, want %v when rotating %v by %v", got, tt.want, tt.p, tt.angle)
+		}
+	}
+}
+
+func TestCompose(t *testing.T) {
+	snapTenth := func(f float64) float64 {
+		return math.Round(f*10) / 10
+	}
+	rp := func(p *Point) *Point {
+		return &Point{snapTenth(p.X), snapTenth(p.Y)}
+	}
+	type labeledAffine struct {
+		label string
+		a     *Affine
+	}
+	transforms := []interface{}{
+		labeledAffine{"identity", Identity()},
+		labeledAffine{"translate(1, 2)", MakeTranslate(1, 2)},
+		labeledAffine{"scale(3, 4)", MakeScale(3, 4)},
+		labeledAffine{"rotate(-π/2)", MakeRotate(-math.Pi / 2)},
+	}
+
+	for _, p := range []*Point{{1, 2}, {2, 1}, {0, 0}} {
+		for affinePair := range cartesian.Iter(transforms, transforms) {
+			first := affinePair[0].(labeledAffine)
+			second := affinePair[1].(labeledAffine)
+			want := second.a.TransformPoint(first.a.TransformPoint(p))
+			got := Compose(first.a, second.a).TransformPoint(p)
+			if Distance(got, want) > epsilon {
+				t.Errorf(
+					"Got %v, want %v with first %s (= %v) then %s",
+					*rp(got), *rp(want),
+					first.label, *rp(first.a.TransformPoint(p)),
+					second.label)
+			}
+		}
+	}
+}
+
+func TestNewRectFromCorners(t *testing.T) {
+	type tc struct {
+		a, b *Point
+		want *Rect
+	}
+	for _, tt := range []tc{
+		{&Point{0, 0}, &Point{1, 1}, &Rect{Point{0, 0}, Point{1, 1}}},
+		{&Point{0, 1}, &Point{1, 0}, &Rect{Point{0, 0}, Point{1, 1}}},
+		{&Point{1, 1}, &Point{0, 0}, &Rect{Point{0, 0}, Point{1, 1}}},
+		{&Point{1, 0}, &Point{0, 1}, &Rect{Point{0, 0}, Point{1, 1}}},
+	} {
+		got := NewRectFromCorners(tt.a, tt.b)
+		if *got != *tt.want {
+			t.Errorf("Got %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func TestTransformRect(t *testing.T) {
+	type tc struct {
+		r    *Rect
+		m    *Affine
+		want *Rect
+	}
+	for _, tt := range []tc{
+		{NewRectFromEdges(0, 0, 1, 1), Identity(), NewRectFromEdges(0, 0, 1, 1)},
+	} {
+		got := tt.m.TransformRect(tt.r)
+		if *got != *tt.want {
+			t.Errorf("Got %v, want %v", got, tt.want)
 		}
 	}
 }
