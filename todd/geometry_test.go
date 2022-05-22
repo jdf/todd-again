@@ -145,20 +145,34 @@ func TestAppend(t *testing.T) {
 		}
 	}
 }
+
 func TestNewRectFromCorners(t *testing.T) {
 	type tc struct {
 		a, b *Point
-		want *Rect
 	}
+	want := &Rect{Point{0, 0}, Point{1, 1}}
 	for _, tt := range []tc{
-		{&Point{0, 0}, &Point{1, 1}, &Rect{Point{0, 0}, Point{1, 1}}},
-		{&Point{0, 1}, &Point{1, 0}, &Rect{Point{0, 0}, Point{1, 1}}},
-		{&Point{1, 1}, &Point{0, 0}, &Rect{Point{0, 0}, Point{1, 1}}},
-		{&Point{1, 0}, &Point{0, 1}, &Rect{Point{0, 0}, Point{1, 1}}},
+		{&Point{0, 0}, &Point{1, 1}},
+		{&Point{0, 1}, &Point{1, 0}},
+		{&Point{1, 1}, &Point{0, 0}},
+		{&Point{1, 0}, &Point{0, 1}},
 	} {
-		got := NewRectFromCorners(tt.a, tt.b)
-		if *got != *tt.want {
-			t.Errorf("Got %v, want %v", got, tt.want)
+		if got := NewRectFromCorners(tt.a, tt.b); *got != *want {
+			t.Errorf("Got %v, want %v", got, want)
+		}
+	}
+}
+
+func TestNewRectFromEdges(t *testing.T) {
+	want := &Rect{Point{0, 0}, Point{1, 1}}
+	for _, tt := range [][4]float64{
+		{0, 0, 1, 1},
+		{0, 1, 1, 0},
+		{1, 0, 0, 1},
+		{1, 1, 0, 0},
+	} {
+		if got := NewRectFromEdges(tt[0], tt[1], tt[2], tt[3]); *got != *want {
+			t.Errorf("Got %v, want %v from %v", got, want, tt)
 		}
 	}
 }
