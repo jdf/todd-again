@@ -86,20 +86,56 @@ func MakeRotate(angle float64) *Affine {
 	}
 }
 
+// Copy returns a copy of this affine transform.
+func (m *Affine) Copy() *Affine {
+	return &Affine{
+		m[0], m[1], m[2],
+		m[3], m[4], m[5],
+	}
+}
+
+// composeInto returns the composition of two affine transforms, such that "first"
+// and "second" are applied in that order. The result Affine may be equal to either
+// of the inputs, or nil, in which case a new Affine is allocated.
+func composeInto(first, second, target *Affine) *Affine {
+	if target == nil {
+		target = &Affine{}
+	}
+	a := second
+	b := first
+	t0 := a[0]*b[0] + a[1]*b[3]
+	t1 := a[0]*b[1] + a[1]*b[4]
+	t2 := a[0]*b[2] + a[1]*b[5] + a[2]
+	t3 := a[3]*b[0] + a[4]*b[3]
+	t4 := a[3]*b[1] + a[4]*b[4]
+	t5 := a[3]*b[2] + a[4]*b[5] + a[5]
+	target[0] = t0
+	target[1] = t1
+	target[2] = t2
+	target[3] = t3
+	target[4] = t4
+	target[5] = t5
+	return target
+}
+
 // Compose returns the composition of two affine transforms, such that "first"
 // and "second" are applied in that order.
 func Compose(first, second *Affine) *Affine {
-	a := second
-	b := first
+	return composeInto(first, second, nil)
+}
 
-	return &Affine{
-		a[0]*b[0] + a[1]*b[3],
-		a[0]*b[1] + a[1]*b[4],
-		a[0]*b[2] + a[1]*b[5] + a[2],
-		a[3]*b[0] + a[4]*b[3],
-		a[3]*b[1] + a[4]*b[4],
-		a[3]*b[2] + a[4]*b[5] + a[5],
-	}
+// Prepend mutates this affine transform by prepending the other affine transform;
+// the resulting Affine has the effect of first applying the other Affine, then
+// applying this Affine.
+func (m *Affine) Prepend(other *Affine) *Affine {
+	return composeInto(other, m, m)
+}
+
+// Append mutates this affine transform by appending the other affine transform;
+// the resulting Affine has the effect of first applying this Affine, then
+// applying the other Affine.
+func (m *Affine) Append(other *Affine) *Affine {
+	return composeInto(m, other, m)
 }
 
 // TransformPoint applies the affine transform to a Point,

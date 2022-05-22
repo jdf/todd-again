@@ -66,24 +66,27 @@ func TestRotate(t *testing.T) {
 	}
 }
 
-func TestCompose(t *testing.T) {
-	snapTenth := func(f float64) float64 {
-		return math.Round(f*10) / 10
-	}
-	rp := func(p *Point) *Point {
-		return &Point{snapTenth(p.X), snapTenth(p.Y)}
-	}
-	type labeledAffine struct {
-		label string
-		a     *Affine
-	}
-	transforms := []interface{}{
-		labeledAffine{"identity", Identity()},
-		labeledAffine{"translate(1, 2)", MakeTranslate(1, 2)},
-		labeledAffine{"scale(3, 4)", MakeScale(3, 4)},
-		labeledAffine{"rotate(-π/2)", MakeRotate(-math.Pi / 2)},
-	}
+func snapTenth(f float64) float64 {
+	return math.Round(f*10) / 10
+}
 
+func rp(p *Point) *Point {
+	return &Point{snapTenth(p.X), snapTenth(p.Y)}
+}
+
+type labeledAffine struct {
+	label string
+	a     *Affine
+}
+
+var transforms = []interface{}{
+	labeledAffine{"identity", Identity()},
+	labeledAffine{"translate(1, 2)", MakeTranslate(1, 2)},
+	labeledAffine{"scale(3, 4)", MakeScale(3, 4)},
+	labeledAffine{"rotate(-π/2)", MakeRotate(-math.Pi / 2)},
+}
+
+func TestCompose(t *testing.T) {
 	for _, p := range []*Point{{1, 2}, {2, 1}, {0, 0}} {
 		for affinePair := range cartesian.Iter(transforms, transforms) {
 			first := affinePair[0].(labeledAffine)
@@ -101,6 +104,47 @@ func TestCompose(t *testing.T) {
 	}
 }
 
+func TestPrepend(t *testing.T) {
+	for _, p := range []*Point{{1, 2}, {2, 1}, {0, 0}} {
+		for affinePair := range cartesian.Iter(transforms, transforms) {
+			first := affinePair[0].(labeledAffine)
+			second := affinePair[1].(labeledAffine)
+			firstCopy := first.a.Copy()
+			secondCopy := second.a.Copy()
+			want := secondCopy.TransformPoint(firstCopy.TransformPoint(p))
+			secondCopy.Prepend(firstCopy)
+			got := secondCopy.TransformPoint(p)
+			if Distance(got, want) > epsilon {
+				t.Errorf(
+					"Got %v, want %v with first %s (= %v) then %s",
+					*rp(got), *rp(want),
+					first.label, *rp(first.a.TransformPoint(p)),
+					second.label)
+			}
+		}
+	}
+}
+
+func TestAppend(t *testing.T) {
+	for _, p := range []*Point{{1, 2}, {2, 1}, {0, 0}} {
+		for affinePair := range cartesian.Iter(transforms, transforms) {
+			first := affinePair[0].(labeledAffine)
+			second := affinePair[1].(labeledAffine)
+			firstCopy := first.a.Copy()
+			secondCopy := second.a.Copy()
+			want := secondCopy.TransformPoint(firstCopy.TransformPoint(p))
+			firstCopy.Append(secondCopy)
+			got := firstCopy.TransformPoint(p)
+			if Distance(got, want) > epsilon {
+				t.Errorf(
+					"Got %v, want %v with first %s (= %v) then %s",
+					*rp(got), *rp(want),
+					first.label, *rp(first.a.TransformPoint(p)),
+					second.label)
+			}
+		}
+	}
+}
 func TestNewRectFromCorners(t *testing.T) {
 	type tc struct {
 		a, b *Point
