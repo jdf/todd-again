@@ -17,13 +17,8 @@ func Distance(p1, p2 *Point) float64 {
 	return math.Hypot(p1.X-p2.X, p1.Y-p2.Y)
 }
 
-// RectDistance returns the max Euclidean distance between the corners of two rects.
-func RectDistance(r1, r2 *Rect) float64 {
-	return math.Max(Distance(&r1.Min, &r2.Min), Distance(&r1.Max, &r2.Max))
-}
-
 // Rect is an axis-aligned rectangle specified by its bottom left corner and top
-// right corner. Please use NewRectFrom.* functions to create new Rects, as they
+// right corner. Please use NewRect.* functions to create new Rects, as they
 // enforce ordering of the corners.
 type Rect struct {
 	Min, Max Point
