@@ -21,7 +21,7 @@ func TestIdentity(t *testing.T) {
 func TestScale(t *testing.T) {
 	for _, p := range []*Point{{0, 0}, {1, 2}, {2, 1}, {0, 0}, {4.1, 1.4}} {
 		for _, s := range [][2]float64{{0, 0}, {1, 2}, {2, 1}, {-1, -1.5}} {
-			m := MakeScale(s[0], s[1])
+			m := Scale(s[0], s[1])
 			want := Point{s[0] * p.X, s[1] * p.Y}
 			got := *m.TransformPoint(p)
 			if got != want {
@@ -31,10 +31,10 @@ func TestScale(t *testing.T) {
 	}
 }
 
-func TestTranslate(t *testing.T) {
+func TestTranslation(t *testing.T) {
 	for _, p := range []*Point{{0, 0}, {1, 2}, {2, 1}, {0, 0}, {4.1, 1.4}} {
 		for _, s := range [][2]float64{{0, 0}, {1, 2}, {2, 1}, {-1, -1.5}} {
-			m := MakeTranslate(s[0], s[1])
+			m := Translation(s[0], s[1])
 			want := Point{s[0] + p.X, s[1] + p.Y}
 			got := *m.TransformPoint(p)
 			if got != want {
@@ -44,7 +44,7 @@ func TestTranslate(t *testing.T) {
 	}
 }
 
-func TestRotate(t *testing.T) {
+func TestRotation(t *testing.T) {
 	type tc struct {
 		p     Point
 		angle float64
@@ -58,7 +58,7 @@ func TestRotate(t *testing.T) {
 		{Point{0, 0}, math.Pi / 2, Point{0, 0}},
 		{Point{4.1, 1.4}, math.Pi / 2, Point{-1.4, 4.1}},
 	} {
-		m := MakeRotate(tt.angle)
+		m := Rotation(tt.angle)
 		got := *m.TransformPoint(&tt.p)
 		if Distance(&got, &tt.want) > epsilon {
 			t.Errorf("Got %v, want %v when rotating %v by %v", got, tt.want, tt.p, tt.angle)
@@ -70,8 +70,12 @@ func snapTenth(f float64) float64 {
 	return math.Round(f*10) / 10
 }
 
-func rp(p *Point) *Point {
+func roundPoint(p *Point) *Point {
 	return &Point{snapTenth(p.X), snapTenth(p.Y)}
+}
+
+func roundRect(r *Rect) *Rect {
+	return &Rect{*roundPoint(&r.Min), *roundPoint(&r.Max)}
 }
 
 type labeledAffine struct {
@@ -81,9 +85,9 @@ type labeledAffine struct {
 
 var transforms = []interface{}{
 	labeledAffine{"identity", Identity()},
-	labeledAffine{"translate(1, 2)", MakeTranslate(1, 2)},
-	labeledAffine{"scale(3, 4)", MakeScale(3, 4)},
-	labeledAffine{"rotate(-π/2)", MakeRotate(-math.Pi / 2)},
+	labeledAffine{"translate(1, 2)", Translation(1, 2)},
+	labeledAffine{"scale(3, 4)", Scale(3, 4)},
+	labeledAffine{"rotate(-π/2)", Rotation(-math.Pi / 2)},
 }
 
 func TestCompose(t *testing.T) {
@@ -96,8 +100,8 @@ func TestCompose(t *testing.T) {
 			if Distance(got, want) > epsilon {
 				t.Errorf(
 					"Got %v, want %v with first %s (= %v) then %s",
-					*rp(got), *rp(want),
-					first.label, *rp(first.a.TransformPoint(p)),
+					*roundPoint(got), *roundPoint(want),
+					first.label, *roundPoint(first.a.TransformPoint(p)),
 					second.label)
 			}
 		}
@@ -117,8 +121,8 @@ func TestPrepend(t *testing.T) {
 			if Distance(got, want) > epsilon {
 				t.Errorf(
 					"Got %v, want %v with first %s (= %v) then %s",
-					*rp(got), *rp(want),
-					first.label, *rp(first.a.TransformPoint(p)),
+					*roundPoint(got), *roundPoint(want),
+					first.label, *roundPoint(first.a.TransformPoint(p)),
 					second.label)
 			}
 		}
@@ -138,10 +142,30 @@ func TestAppend(t *testing.T) {
 			if Distance(got, want) > epsilon {
 				t.Errorf(
 					"Got %v, want %v with first %s (= %v) then %s",
-					*rp(got), *rp(want),
-					first.label, *rp(first.a.TransformPoint(p)),
+					*roundPoint(got), *roundPoint(want),
+					first.label, *roundPoint(first.a.TransformPoint(p)),
 					second.label)
 			}
+		}
+	}
+}
+
+func TestRotationAround(t *testing.T) {
+	type tc struct {
+		p    Point
+		want *Rect
+	}
+
+	r := NewRect(0, 0, 2, 1)
+	angle := -math.Pi / 2
+	for _, tt := range []tc{
+		{Point{0, 0}, NewRect(0, 0, 1, -2)},
+		{Point{2, 1}, NewRect(1, 1, 2, 3)},
+		{Point{1, .5}, NewRect(.5, -.5, 1.5, 1.5)},
+	} {
+		got := roundRect(RotationAround(angle, &tt.p).TransformRect(r))
+		if *got != *tt.want {
+			t.Errorf("Got %v, want %v when rotating around %v", got, tt.want, tt.p)
 		}
 	}
 }
@@ -171,7 +195,7 @@ func TestNewRectFromEdges(t *testing.T) {
 		{1, 0, 0, 1},
 		{1, 1, 0, 0},
 	} {
-		if got := NewRectFromEdges(tt[0], tt[1], tt[2], tt[3]); *got != *want {
+		if got := NewRect(tt[0], tt[1], tt[2], tt[3]); *got != *want {
 			t.Errorf("Got %v, want %v from %v", got, want, tt)
 		}
 	}
@@ -184,7 +208,7 @@ func TestTransformRect(t *testing.T) {
 		want *Rect
 	}
 	for _, tt := range []tc{
-		{NewRectFromEdges(0, 0, 1, 1), Identity(), NewRectFromEdges(0, 0, 1, 1)},
+		{NewRect(0, 0, 1, 1), Identity(), NewRect(0, 0, 1, 1)},
 	} {
 		got := tt.m.TransformRect(tt.r)
 		if *got != *tt.want {
