@@ -8,30 +8,41 @@ import (
 // All geometry takes place on a Cartesian plane where X increases to the right
 // and Y increases upward.
 
-// Point is a location in 2D space.
-type Point struct {
+// Vec2 is a 2D vector. We treat this structure as vectors sometimes, and as
+// points sometimes.
+type Vec2 struct {
 	X, Y float64
 }
 
 // Distance returns the Euclidean distance between two points.
-func Distance(p1, p2 *Point) float64 {
+func Distance(p1, p2 *Vec2) float64 {
 	return math.Hypot(p1.X-p2.X, p1.Y-p2.Y)
 }
 
-func (p *Point) String() string {
-	return fmt.Sprintf("(%f, %f)", p.X, p.Y)
+// Negate returns the component-wise negation of this Vec2.
+func (v *Vec2) Negate() *Vec2 {
+	return &Vec2{-v.X, -v.Y}
+}
+
+// Equals returns true if both vecs have the same coordinates.
+func (v *Vec2) Equals(other *Vec2) bool {
+	return v.X == other.X && v.Y == other.Y
+}
+
+func (v *Vec2) String() string {
+	return fmt.Sprintf("(%f, %f)", v.X, v.Y)
 }
 
 // Rect is an axis-aligned rectangle specified by its bottom left corner and top
 // right corner. Please use NewRect.* functions to create new Rects, as they
 // enforce ordering of the corners.
 type Rect struct {
-	Min, Max Point
+	Min, Max Vec2
 }
 
 // NewRectFromCorners creates a new Rect from the given corners, enforcing the
 // ordering of the corners.
-func NewRectFromCorners(corner1, corner2 *Point) *Rect {
+func NewRectFromCorners(corner1, corner2 *Vec2) *Rect {
 	return NewRect(corner1.X, corner1.Y, corner2.X, corner2.Y)
 }
 
@@ -39,14 +50,14 @@ func NewRectFromCorners(corner1, corner2 *Point) *Rect {
 // ordering of the corners.
 func NewRect(left, bottom, right, top float64) *Rect {
 	return &Rect{
-		Min: Point{math.Min(left, right), math.Min(bottom, top)},
-		Max: Point{math.Max(left, right), math.Max(bottom, top)},
+		Min: Vec2{math.Min(left, right), math.Min(bottom, top)},
+		Max: Vec2{math.Max(left, right), math.Max(bottom, top)},
 	}
 }
 
 // Center returns the center of this Rect.
-func (r *Rect) Center() *Point {
-	return &Point{
+func (r *Rect) Center() *Vec2 {
+	return &Vec2{
 		(r.Min.X + r.Max.X) / 2,
 		(r.Min.Y + r.Max.Y) / 2,
 	}
@@ -80,18 +91,18 @@ func Identity() *Affine {
 }
 
 // Scale creates a scaling transform.
-func Scale(x, y float64) *Affine {
+func Scale(s *Vec2) *Affine {
 	return &Affine{
-		x, 0, 0,
-		0, y, 0,
+		s.X, 0, 0,
+		0, s.Y, 0,
 	}
 }
 
 // Translation creates a translation transform.
-func Translation(x, y float64) *Affine {
+func Translation(t *Vec2) *Affine {
 	return &Affine{
-		1, 0, x,
-		0, 1, y,
+		1, 0, t.X,
+		0, 1, t.Y,
 	}
 }
 
@@ -106,8 +117,8 @@ func Rotation(angle float64) *Affine {
 }
 
 // RotationAround returns a transform that rotates around the given point.
-func RotationAround(angle float64, p *Point) *Affine {
-	return Compose(Translation(-p.X, -p.Y), Rotation(angle), Translation(p.X, p.Y))
+func RotationAround(angle float64, p *Vec2) *Affine {
+	return Compose(Translation(&Vec2{-p.X, -p.Y}), Rotation(angle), Translation(&Vec2{p.X, p.Y}))
 }
 
 // Copy returns a copy of this affine transform.
@@ -166,10 +177,10 @@ func (m *Affine) Append(other *Affine) *Affine {
 	return composeInto(m, other, m)
 }
 
-// TransformPoint applies the affine transform to a Point,
-// returning a new Point. It does not mutate the original point.
-func (m *Affine) TransformPoint(p *Point) *Point {
-	return &Point{
+// TransformVec2 applies the affine transform to a Vec2,
+// returning a new Vec2. It does not mutate the original point.
+func (m *Affine) TransformVec2(p *Vec2) *Vec2 {
+	return &Vec2{
 		m[0]*p.X + m[1]*p.Y + m[2],
 		m[3]*p.X + m[4]*p.Y + m[5],
 	}
@@ -179,7 +190,7 @@ func (m *Affine) TransformPoint(p *Point) *Point {
 // returning a new Rect. It does not mutate the original rect.
 func (m *Affine) TransformRect(r *Rect) *Rect {
 	return NewRectFromCorners(
-		m.TransformPoint(&r.Min),
-		m.TransformPoint(&r.Max),
+		m.TransformVec2(&r.Min),
+		m.TransformVec2(&r.Max),
 	)
 }
