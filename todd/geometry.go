@@ -1,6 +1,7 @@
 package todd
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -15,6 +16,10 @@ type Point struct {
 // Distance returns the Euclidean distance between two points.
 func Distance(p1, p2 *Point) float64 {
 	return math.Hypot(p1.X-p2.X, p1.Y-p2.Y)
+}
+
+func (p *Point) String() string {
+	return fmt.Sprintf("(%f, %f)", p.X, p.Y)
 }
 
 // Rect is an axis-aligned rectangle specified by its bottom left corner and top
@@ -37,6 +42,23 @@ func NewRect(left, bottom, right, top float64) *Rect {
 		Min: Point{math.Min(left, right), math.Min(bottom, top)},
 		Max: Point{math.Max(left, right), math.Max(bottom, top)},
 	}
+}
+
+// Center returns the center of this Rect.
+func (r *Rect) Center() *Point {
+	return &Point{
+		(r.Min.X + r.Max.X) / 2,
+		(r.Min.Y + r.Max.Y) / 2,
+	}
+}
+
+// Size returns the dimensions of this Rect.
+func (r *Rect) Size() *Dimension {
+	return &Dimension{r.Max.X - r.Min.X, r.Max.Y - r.Min.Y}
+}
+
+func (r *Rect) String() string {
+	return "Rect[" + r.Min.String() + "->" + r.Max.String() + "]"
 }
 
 // Affine is a transformation matrix.
