@@ -56,6 +56,7 @@ func (c *Camera) Pan(v *Vec2) {
 	c.invalidate()
 }
 
+// Zoom scales the camera by the given factor, keeping the center of the camera fixed.
 func (c *Camera) Zoom(factor float64) {
 	zoomer := Compose(
 		Translate(c.worldRect.Center().Negate()),

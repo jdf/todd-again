@@ -174,6 +174,7 @@ func Scale(s *Vec2) *Affine {
 	}
 }
 
+// UniformScale creates a uniform scaling transform.
 func UniformScale(s float64) *Affine {
 	return &Affine{
 		s, 0, 0,
