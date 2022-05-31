@@ -17,6 +17,8 @@ const (
 	screenWidth  = 1200
 	screenHeight = 600
 
+	aspectRatio = float64(screenWidth) / float64(screenHeight)
+
 	worldLeft  = -100.0
 	worldRight = 100.0
 )
@@ -52,6 +54,20 @@ func (g *Game) Update() error {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.camera.Right() < worldRight+5 {
 		g.camera.Pan(&Vec2{2, 0})
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		if ebiten.IsKeyPressed(ebiten.KeyMeta) {
+			g.camera.Zoom(0.95)
+		} else {
+			g.camera.Pan(&Vec2{0, 2})
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		if ebiten.IsKeyPressed(ebiten.KeyMeta) {
+			g.camera.Zoom(1.05)
+		} else {
+			g.camera.Pan(&Vec2{0, -2})
+		}
 	}
 
 	for _, b := range g.boxes {
@@ -105,7 +121,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 // Layout has a	party with gnomes.
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return screenWidth, screenHeight
+	w, h := float64(outsideWidth), float64(outsideHeight)
+	if w/h > aspectRatio {
+		w = h * aspectRatio
+	} else {
+		h = w / aspectRatio
+	}
+	ow, oh := int(w), int(h)
+	img := image.NewRGBA(image.Rect(0, 0, ow, oh))
+	g.frameBuffer = img
+	g.gfx = &Graphics{Context: *gg.NewContextForRGBA(img)}
+	g.camera.SetScreenRect(NewRect(0, 0, float64(w), float64(h)))
+	return ow, oh
 }
 
 func initColors() []colorful.Color {

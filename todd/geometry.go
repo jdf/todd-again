@@ -174,6 +174,13 @@ func Scale(s *Vec2) *Affine {
 	}
 }
 
+func UniformScale(s float64) *Affine {
+	return &Affine{
+		s, 0, 0,
+		0, s, 0,
+	}
+}
+
 // Translate creates a translation transform.
 func Translate(t *Vec2) *Affine {
 	return &Affine{

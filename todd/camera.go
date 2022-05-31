@@ -56,6 +56,16 @@ func (c *Camera) Pan(v *Vec2) {
 	c.invalidate()
 }
 
+func (c *Camera) Zoom(factor float64) {
+	zoomer := Compose(
+		Translate(c.worldRect.Center().Negate()),
+		UniformScale(factor),
+		Translate(c.worldRect.Center()),
+	)
+	c.worldRect = zoomer.TransformRect(c.worldRect)
+	c.invalidate()
+}
+
 func (c *Camera) invalidate() {
 	c.worldToDisplay = nil
 	c.displayToWorld = nil
