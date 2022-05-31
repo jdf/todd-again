@@ -7,19 +7,19 @@ func TestFullViewport(t *testing.T) {
 	// We map it to a display from 0, 0 to 1, 1.
 	v := NewView(NewRect(-100, -100, 100, 100))
 
-	got := v.WorldToDisplayP(&Vec2{0, 0})
+	got := v.ToScreenVec2(&Vec2{0, 0})
 	want := &Vec2{0.5, 0.5}
 	if !got.Equals(want) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 
-	got = v.WorldToDisplayP(&Vec2{-100, -100})
+	got = v.ToScreenVec2(&Vec2{-100, -100})
 	want = &Vec2{0, 0}
 	if !got.Equals(want) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 
-	got = v.WorldToDisplayP(&Vec2{100, 100})
+	got = v.ToScreenVec2(&Vec2{100, 100})
 	want = &Vec2{1, 1}
 	if !got.Equals(want) {
 		t.Errorf("got %v, want %v", got, want)

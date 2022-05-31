@@ -14,6 +14,23 @@ type Vec2 struct {
 	X, Y float64
 }
 
+func (v *Vec2) Copy() *Vec2 {
+	return &Vec2{v.X, v.Y}
+}
+
+func (v *Vec2) AddToSelf(d *Vec2) {
+	v.X += d.X
+	v.Y += d.Y
+}
+
+func (v *Vec2) Plus(t *Vec2) *Vec2 {
+	return &Vec2{v.X + t.X, v.Y + t.Y}
+}
+
+func (v *Vec2) Minus(t *Vec2) *Vec2 {
+	return &Vec2{v.X - t.X, v.Y - t.Y}
+}
+
 // Distance returns the Euclidean distance between two points.
 func Distance(p1, p2 *Vec2) float64 {
 	return math.Hypot(p1.X-p2.X, p1.Y-p2.Y)
@@ -22,6 +39,10 @@ func Distance(p1, p2 *Vec2) float64 {
 // Negate returns the component-wise negation of this Vec2.
 func (v *Vec2) Negate() *Vec2 {
 	return &Vec2{-v.X, -v.Y}
+}
+
+func (v *Vec2) Div(d *Vec2) *Vec2 {
+	return &Vec2{v.X / d.X, v.Y / d.Y}
 }
 
 // Equals returns true if both vecs have the same coordinates.
@@ -40,6 +61,10 @@ type Rect struct {
 	Min, Max Vec2
 }
 
+func (r *Rect) Copy() *Rect {
+	return &Rect{*r.Min.Copy(), *r.Max.Copy()}
+}
+
 // NewRectFromCorners creates a new Rect from the given corners, enforcing the
 // ordering of the corners.
 func NewRectFromCorners(corner1, corner2 *Vec2) *Rect {
@@ -55,6 +80,16 @@ func NewRect(left, bottom, right, top float64) *Rect {
 	}
 }
 
+func (r *Rect) AddToSelf(t *Vec2) {
+	r.Min.AddToSelf(t)
+	r.Max.AddToSelf(t)
+}
+
+func (r *Rect) Intersects(other *Rect) bool {
+	return r.Min.X <= other.Max.X && r.Max.X >= other.Min.X &&
+		r.Min.Y <= other.Max.Y && r.Max.Y >= other.Min.Y
+}
+
 // Center returns the center of this Rect.
 func (r *Rect) Center() *Vec2 {
 	return &Vec2{
@@ -63,9 +98,33 @@ func (r *Rect) Center() *Vec2 {
 	}
 }
 
+func (r *Rect) Left() float64 {
+	return r.Min.X
+}
+
+func (r *Rect) Right() float64 {
+	return r.Max.X
+}
+
+func (r *Rect) Bottom() float64 {
+	return r.Min.Y
+}
+
+func (r *Rect) Top() float64 {
+	return r.Max.Y
+}
+
+func (r *Rect) Width() float64 {
+	return r.Max.X - r.Min.X
+}
+
+func (r *Rect) Height() float64 {
+	return r.Max.Y - r.Min.Y
+}
+
 // Size returns the dimensions of this Rect.
-func (r *Rect) Size() *Dimension {
-	return &Dimension{r.Max.X - r.Min.X, r.Max.Y - r.Min.Y}
+func (r *Rect) Size() *Vec2 {
+	return &Vec2{r.Max.X - r.Min.X, r.Max.Y - r.Min.Y}
 }
 
 func (r *Rect) String() string {
@@ -98,8 +157,8 @@ func Scale(s *Vec2) *Affine {
 	}
 }
 
-// Translation creates a translation transform.
-func Translation(t *Vec2) *Affine {
+// Translate creates a translation transform.
+func Translate(t *Vec2) *Affine {
 	return &Affine{
 		1, 0, t.X,
 		0, 1, t.Y,
@@ -118,7 +177,7 @@ func Rotation(angle float64) *Affine {
 
 // RotationAround returns a transform that rotates around the given point.
 func RotationAround(angle float64, p *Vec2) *Affine {
-	return Compose(Translation(&Vec2{-p.X, -p.Y}), Rotation(angle), Translation(&Vec2{p.X, p.Y}))
+	return Compose(Translate(&Vec2{-p.X, -p.Y}), Rotation(angle), Translate(&Vec2{p.X, p.Y}))
 }
 
 // Copy returns a copy of this affine transform.

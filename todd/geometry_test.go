@@ -34,7 +34,7 @@ func TestScale(t *testing.T) {
 func TestTranslation(t *testing.T) {
 	for _, p := range []*Vec2{{0, 0}, {1, 2}, {2, 1}, {0, 0}, {4.1, 1.4}} {
 		for _, v := range []*Vec2{{0, 0}, {1, 2}, {2, 1}, {-1, -1.5}} {
-			m := Translation(v)
+			m := Translate(v)
 			want := Vec2{v.X + p.X, v.Y + p.Y}
 			got := *m.TransformVec2(p)
 			if got != want {
@@ -85,7 +85,7 @@ type labeledAffine struct {
 
 var transforms = []interface{}{
 	labeledAffine{"identity", Identity()},
-	labeledAffine{"translate(1, 2)", Translation(&Vec2{1, 2})},
+	labeledAffine{"translate(1, 2)", Translate(&Vec2{1, 2})},
 	labeledAffine{"scale(3, 4)", Scale(&Vec2{3, 4})},
 	labeledAffine{"rotate(-π/2)", Rotation(-math.Pi / 2)},
 }
@@ -213,6 +213,28 @@ func TestTransformRect(t *testing.T) {
 		got := tt.m.TransformRect(tt.r)
 		if *got != *tt.want {
 			t.Errorf("Got %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func TestRectIntersects(t *testing.T) {
+	fred := NewRect(0, 0, 1, 1)
+	type tc struct {
+		george *Rect
+		want   bool
+	}
+	for _, tt := range []tc{
+		{NewRect(0, 0, 1, 1), true},
+		{NewRect(-1, -1, 2, 2), true},
+		{NewRect(.25, .25, .75, .75), true},
+		{NewRect(0, 0, 1, 2), true},
+		{NewRect(1, 1, 2, 2), true},
+		{NewRect(1.000001, 1.00001, 2, 2), false},
+		{NewRect(-1, -1, -.00001, -0.00001), false},
+	} {
+		if got := fred.Intersects(tt.george); got != tt.want {
+			t.Errorf("got %v, want %v when intersecting %v and %v",
+				got, tt.want, *fred, *tt.george)
 		}
 	}
 }
