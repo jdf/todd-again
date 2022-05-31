@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/fogleman/gg v1.3.0
-	github.com/hajimehoshi/ebiten v1.12.12
 	github.com/hajimehoshi/ebiten/v2 v2.3.3
 	github.com/lucasb-eyer/go-colorful v1.2.0
 )
