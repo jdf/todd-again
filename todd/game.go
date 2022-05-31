@@ -9,6 +9,7 @@ import (
 
 	"github.com/fogleman/gg"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/lucasb-eyer/go-colorful"
 )
 
@@ -46,13 +47,11 @@ type Game struct {
 func (g *Game) Update() error {
 	g.frames++
 
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && g.camera.Left() > worldLeft+2 {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && g.camera.Left() > worldLeft-5 {
 		g.camera.Pan(&Vec2{-2, 0})
-		log.Printf("camera: %v", g.camera)
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.camera.Right() < worldRight-2 {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.camera.Right() < worldRight+5 {
 		g.camera.Pan(&Vec2{2, 0})
-		log.Printf("camera: %v", g.camera)
 	}
 
 	for _, b := range g.boxes {
@@ -77,9 +76,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	dc.SetRGB(0, 0, 0)
 	dc.Clear()
 
-	for _, x := range []int{-100, 0, 100} {
+	for _, x := range []int{-100, -50, 0, 50, 100} {
 		for _, y := range []int{0, 25, 50, 75} {
-			dc.SetColor(color.White)
+			dc.SetColor(color.RGBA{00, 128, 00, 255})
 			dc.DrawText(g.camera, fmt.Sprintf("%d,%d", x, y), float64(x), float64(y))
 		}
 	}
@@ -97,15 +96,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		dc.FillRect(g.camera, box.bounds)
 	}
 
-	//dc.SetRGB(1, 1, 1)
-	//dc.DrawRectangle(20, 20, 100, 100)
-	//dc.Fill()
-
 	screen.ReplacePixels(g.frameBuffer.Pix)
-	// ebitenutil.DebugPrint(screen,
-	// 	fmt.Sprintf("TPS: %0.2f\nFPS: %0.2f",
-	// 		ebiten.CurrentTPS(),
-	// 		ebiten.CurrentFPS()))
+	ebitenutil.DebugPrint(screen,
+		fmt.Sprintf("TPS: %0.2f\nFPS: %0.2f",
+			ebiten.CurrentTPS(),
+			ebiten.CurrentFPS()))
 }
 
 // Layout has a	party with gnomes.
@@ -156,13 +151,14 @@ func Run() {
 	g := &Game{
 		gfx: &Graphics{Context: *gg.NewContextForRGBA(img)},
 		camera: NewCamera(
-			NewRect(worldLeft, 0, worldLeft+100, 50),
+			NewRect(worldLeft, -1, worldLeft+100, 51),
 			NewRect(0, 0, screenWidth, screenHeight)),
 		frameBuffer: img,
 		frames:      0,
 		boxes:       initBoxes(),
 		throbColors: initColors(),
 	}
+	g.camera.SetInvertY(true)
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}

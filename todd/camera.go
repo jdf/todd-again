@@ -10,6 +10,8 @@ type Camera struct {
 	// Cached transforms from world to display space and back.
 	worldToDisplay *Affine
 	displayToWorld *Affine
+
+	invertY bool
 }
 
 // Copy returns a deep copy of the camera.
@@ -30,6 +32,12 @@ func NewCamera(worldRect *Rect, screenRect *Rect) *Camera {
 		worldRect:  worldRect.Copy(),
 		screenRect: screenRect.Copy(),
 	}
+}
+
+// SetInvertY sets whether the Y axis should be inverted in display space.
+func (c *Camera) SetInvertY(invertY bool) {
+	c.invertY = invertY
+	c.invalidate()
 }
 
 // Left returns the left edge of the world rectangle.
@@ -62,12 +70,20 @@ func (c *Camera) SetScreenRect(viewport *Rect) {
 
 func (c *Camera) getTransform() *Affine {
 	if c.worldToDisplay == nil {
+		var inverter *Affine
+		if c.invertY {
+			inverter = Compose(
+				Scale(&Vec2{1, -1}),
+				Translate(&Vec2{0, c.screenRect.Height()}),
+			)
+		} else {
+			inverter = Identity()
+		}
 		c.worldToDisplay = Compose(
 			Translate(c.worldRect.Center().Negate()),
 			Scale(c.screenRect.Size().Div(c.worldRect.Size())),
 			Translate(c.screenRect.Center()),
-			Scale(&Vec2{1, -1}),
-			Translate(&Vec2{0, c.screenRect.Height()}),
+			inverter,
 		)
 	}
 	return c.worldToDisplay
