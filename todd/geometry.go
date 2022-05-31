@@ -14,19 +14,25 @@ type Vec2 struct {
 	X, Y float64
 }
 
+// Copy returns a deep copy of this Vec2.
 func (v *Vec2) Copy() *Vec2 {
 	return &Vec2{v.X, v.Y}
 }
 
+// AddToSelf adds the given Vec2 to this.
 func (v *Vec2) AddToSelf(d *Vec2) {
 	v.X += d.X
 	v.Y += d.Y
 }
 
+// Plus adds the given Vec2 to this Vec2 and returns the result
+// as a new Vec2.
 func (v *Vec2) Plus(t *Vec2) *Vec2 {
 	return &Vec2{v.X + t.X, v.Y + t.Y}
 }
 
+// Minus subtracts the given Vec2 from this Vec2 and returns the result
+// as a new Vec2.
 func (v *Vec2) Minus(t *Vec2) *Vec2 {
 	return &Vec2{v.X - t.X, v.Y - t.Y}
 }
@@ -41,6 +47,7 @@ func (v *Vec2) Negate() *Vec2 {
 	return &Vec2{-v.X, -v.Y}
 }
 
+// Div component-wise divides this Vec2 by the given Vec2.
 func (v *Vec2) Div(d *Vec2) *Vec2 {
 	return &Vec2{v.X / d.X, v.Y / d.Y}
 }
@@ -51,7 +58,7 @@ func (v *Vec2) Equals(other *Vec2) bool {
 }
 
 func (v *Vec2) String() string {
-	return fmt.Sprintf("(%f, %f)", v.X, v.Y)
+	return fmt.Sprintf("(%0.2f, %0.2f)", v.X, v.Y)
 }
 
 // Rect is an axis-aligned rectangle specified by its bottom left corner and top
@@ -61,6 +68,7 @@ type Rect struct {
 	Min, Max Vec2
 }
 
+// Copy returns a deep copy of this Rect.
 func (r *Rect) Copy() *Rect {
 	return &Rect{*r.Min.Copy(), *r.Max.Copy()}
 }
@@ -80,11 +88,14 @@ func NewRect(left, bottom, right, top float64) *Rect {
 	}
 }
 
+// AddToSelf applies the given translation to this rectangle.
 func (r *Rect) AddToSelf(t *Vec2) {
 	r.Min.AddToSelf(t)
 	r.Max.AddToSelf(t)
 }
 
+// Intersects returns true if the given rectangle intersects this one, where
+// coincident edges are considered to intersect.
 func (r *Rect) Intersects(other *Rect) bool {
 	return r.Min.X <= other.Max.X && r.Max.X >= other.Min.X &&
 		r.Min.Y <= other.Max.Y && r.Max.Y >= other.Min.Y
@@ -98,26 +109,32 @@ func (r *Rect) Center() *Vec2 {
 	}
 }
 
+// Left returns the leftmost point of this Rect.
 func (r *Rect) Left() float64 {
 	return r.Min.X
 }
 
+// Right returns the rightmost point of this Rect.
 func (r *Rect) Right() float64 {
 	return r.Max.X
 }
 
+// Bottom returns the bottommost point of this Rect.
 func (r *Rect) Bottom() float64 {
 	return r.Min.Y
 }
 
+// Top returns the topmost point of this Rect.
 func (r *Rect) Top() float64 {
 	return r.Max.Y
 }
 
+// Width returns the width of this rectangle.
 func (r *Rect) Width() float64 {
 	return r.Max.X - r.Min.X
 }
 
+// Height returns the height of this rectangle.
 func (r *Rect) Height() float64 {
 	return r.Max.Y - r.Min.Y
 }
@@ -243,6 +260,12 @@ func (m *Affine) TransformVec2(p *Vec2) *Vec2 {
 		m[0]*p.X + m[1]*p.Y + m[2],
 		m[3]*p.X + m[4]*p.Y + m[5],
 	}
+}
+
+// TransformXY applies the affine transform to the given coordinate.
+func (m *Affine) TransformXY(x, y float64) (float64, float64) {
+	return m[0]*x + m[1]*y + m[2], m[3]*x + m[4]*y + m[5]
+
 }
 
 // TransformRect applies the affine transform to a Rect,

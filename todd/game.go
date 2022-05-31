@@ -13,13 +13,14 @@ import (
 )
 
 const (
-	screenWidth  = 600
-	screenHeight = 300
+	screenWidth  = 1200
+	screenHeight = 600
 
 	worldLeft  = -100.0
 	worldRight = 100.0
 )
 
+// Box is a box is a box is a box. Loveliness extreme.
 type Box struct {
 	bounds         *Rect
 	colorIndex     int
@@ -45,13 +46,13 @@ type Game struct {
 func (g *Game) Update() error {
 	g.frames++
 
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && g.camera.Left() > worldLeft {
-		g.camera.AddToSelf(&Vec2{-2, 0})
-		log.Printf("camera: %v<->%v", g.camera.Min.X, g.camera.Max.X)
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && g.camera.Left() > worldLeft+2 {
+		g.camera.Pan(&Vec2{-2, 0})
+		log.Printf("camera: %v", g.camera)
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.camera.Right() < worldRight {
-		g.camera.AddToSelf(&Vec2{2, 0})
-		log.Printf("camera: %v<->%v", g.camera.Min.X, g.camera.Max.X)
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.camera.Right() < worldRight-2 {
+		g.camera.Pan(&Vec2{2, 0})
+		log.Printf("camera: %v", g.camera)
 	}
 
 	for _, b := range g.boxes {
@@ -76,57 +77,25 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	dc.SetRGB(0, 0, 0)
 	dc.Clear()
 
-	// Draw the world.
-	dc.Push()
-
-	dr := func(c color.Color, s string) {
-		dc.SetColor(c)
-		dc.DrawRectangle(0, 0, 10, 10)
-		dc.Fill()
-		dc.SetRGB(1, 0, 0)
-		dc.DrawRectangle(0, 0, 2, 2)
-		dc.Fill()
-		dc.SetColor(color.RGBA{0, 255, 0, 255})
-		dc.DrawString(s, 10, 22)
-	}
-	_ = dr
-
-	//dr(color.White, "before invert")
-	//dc.InvertY()
-	// dr(color.White, "before xlate")
-	// dr(color.White, "after xlate")
-	//dc.InvertY()
-	//dc.Scale(screenWidth/g.camera.Size().Width, screenHeight/g.camera.Size().Height)
-	//dc.Translate(-g.camera.Center().X, -g.camera.Center().Y)
-
-	// dr(color.White, "after scale")
-	//dc.Translate(50, 25)
-	//dr(color.White, "FINAL")
-
 	for _, x := range []int{-100, 0, 100} {
 		for _, y := range []int{0, 25, 50, 75} {
 			dc.SetColor(color.White)
-			dc.DrawString(fmt.Sprintf("%d,%d", x, y), float64(x), float64(y))
+			dc.DrawText(g.camera, fmt.Sprintf("%d,%d", x, y), float64(x), float64(y))
 		}
 	}
 
 	dc.SetColor(color.White)
 	dc.SetLineWidth(4)
-	dc.DrawLine(worldLeft, 0, worldRight, 50)
+	dc.DrawLine(g.camera, worldLeft, 0, worldRight, 50)
 	dc.Stroke()
 
 	for _, box := range g.boxes {
-		// if !box.bounds.Intersects(g.camera) {
-		// 	continue
-		// }
+		if !g.camera.CanSee(box.bounds) {
+			continue
+		}
 		dc.SetColor(g.throbColors[box.colorIndex])
-		//dc.SetColor(color.White)
-		r := box.bounds
-		dc.DrawRectangle(r.Min.X, r.Min.Y, r.Size().X, r.Size().Y)
-		dc.Fill()
+		dc.FillRect(g.camera, box.bounds)
 	}
-
-	dc.Pop()
 
 	//dc.SetRGB(1, 1, 1)
 	//dc.DrawRectangle(20, 20, 100, 100)
@@ -185,8 +154,10 @@ func Run() {
 	ebiten.SetScreenClearedEveryFrame(false) // we blit the whole frame anyway
 	img := image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	g := &Game{
-		gfx:         &Graphics{Context: *gg.NewContextForRGBA(img)},
-		camera:      NewRect(worldLeft, 0, worldLeft+100, 50),
+		gfx: &Graphics{Context: *gg.NewContextForRGBA(img)},
+		camera: NewCamera(
+			NewRect(worldLeft, 0, worldLeft+100, 50),
+			NewRect(0, 0, screenWidth, screenHeight)),
 		frameBuffer: img,
 		frames:      0,
 		boxes:       initBoxes(),

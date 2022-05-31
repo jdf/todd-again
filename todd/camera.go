@@ -24,12 +24,28 @@ func (c *Camera) String() string {
 	return fmt.Sprintf("Camera[%s -> %s]", c.worldRect, c.screenRect)
 }
 
-// NewView constructs a View mapped to the complete display area.
-func NewView(worldPort *Rect) *Camera {
+// NewCamera constructs a View mapped to the complete display area.
+func NewCamera(worldRect *Rect, screenRect *Rect) *Camera {
 	return &Camera{
-		worldRect:  worldPort.Copy(),
-		screenRect: NewRect(0, 0, 1, 1),
+		worldRect:  worldRect.Copy(),
+		screenRect: screenRect.Copy(),
 	}
+}
+
+// Left returns the left edge of the world rectangle.
+func (c *Camera) Left() float64 {
+	return c.worldRect.Left()
+}
+
+// Right returns the right edge of the world rectangle.
+func (c *Camera) Right() float64 {
+	return c.worldRect.Right()
+}
+
+// Pan moves the camera by the given amount.
+func (c *Camera) Pan(v *Vec2) {
+	c.worldRect.AddToSelf(v)
+	c.invalidate()
 }
 
 func (c *Camera) invalidate() {
@@ -37,6 +53,7 @@ func (c *Camera) invalidate() {
 	c.displayToWorld = nil
 }
 
+// SetScreenRect sets the screen rectangle.
 func (c *Camera) SetScreenRect(viewport *Rect) {
 	// TODO - check viewport aspect ratio and do something sensible.
 	c.screenRect = viewport
@@ -49,14 +66,26 @@ func (c *Camera) getTransform() *Affine {
 			Translate(c.worldRect.Center().Negate()),
 			Scale(c.screenRect.Size().Div(c.worldRect.Size())),
 			Translate(c.screenRect.Center()),
+			Scale(&Vec2{1, -1}),
+			Translate(&Vec2{0, c.screenRect.Height()}),
 		)
 	}
 	return c.worldToDisplay
 }
 
+// CanSee returns true if the given rectangle is visible in the camera's world window.
+func (c *Camera) CanSee(rect *Rect) bool {
+	return c.worldRect.Intersects(rect)
+}
+
 // ToScreenVec2 converts a point in world space to a point in display space.
 func (c *Camera) ToScreenVec2(worldPos *Vec2) *Vec2 {
 	return c.getTransform().TransformVec2(worldPos)
+}
+
+// ToScreenXY converts a point in world space to a point in display space.
+func (c *Camera) ToScreenXY(x, y float64) (float64, float64) {
+	return c.getTransform().TransformXY(x, y)
 }
 
 // ToScreenRect converts a rectangle in world space to a rectangle in display space.
