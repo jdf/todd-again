@@ -52,6 +52,16 @@ func (c *Camera) Right() float64 {
 	return c.worldRect.Right()
 }
 
+// Top returns the top edge of the world rectangle.
+func (c *Camera) Top() float64 {
+	return c.worldRect.Top()
+}
+
+// Bottom returns the bottom edge of the world rectangle.
+func (c *Camera) Bottom() float64 {
+	return c.worldRect.Bottom()
+}
+
 // Pan moves the camera by the given amount.
 func (c *Camera) Pan(v *Vec2) {
 	c.worldRect.AddToSelf(v)
@@ -138,6 +148,11 @@ func (c *Camera) ToWorldVec2(displayPos *Vec2) *Vec2 {
 // ToWorld converts a point in display space to a point in world space.
 func (c *Camera) ToWorld(x, y float64) (float64, float64) {
 	return c.getInverseTransform().Transform(x, y)
+}
+
+// ToWorldRect converts a rectangle in display space to a rectangle in world space.
+func (c *Camera) ToWorldRect(rect *Rect) *Rect {
+	return c.getInverseTransform().TransformRect(rect)
 }
 
 // Generic functions to transform arbitrary numeric types.

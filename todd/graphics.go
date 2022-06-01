@@ -10,10 +10,16 @@ type Graphics struct {
 	gg.Context
 }
 
-// FillRect fills a rectangle with the current color.
+// FillRect fills a world-space rectangle with the current color.
 func (g *Graphics) FillRect(camera *Camera, r *Rect) {
 	tr := camera.ToScreenRect(r)
 	g.Context.DrawRectangle(tr.Left(), tr.Bottom(), tr.Width(), tr.Height())
+	g.Fill()
+}
+
+// FillRectScreen fills a screen-space rectangle with the current color.
+func (g *Graphics) FillRectScreen(camera *Camera, r *Rect) {
+	g.Context.DrawRectangle(r.Left(), r.Bottom(), r.Width(), r.Height())
 	g.Fill()
 }
 
@@ -21,6 +27,11 @@ func (g *Graphics) FillRect(camera *Camera, r *Rect) {
 func (g *Graphics) DrawText(camera *Camera, s string, x, y float64) {
 	xs, ys := camera.ToScreen(x, y)
 	g.Context.DrawString(s, xs, ys)
+}
+
+// DrawTextScreen draws text at the given position in screen space.
+func (g *Graphics) DrawTextScreen(camera *Camera, s string, x, y float64) {
+	g.Context.DrawString(s, x, y)
 }
 
 // DrawLine draws a line from p1 to p2 in world space.

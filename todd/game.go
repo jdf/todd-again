@@ -9,9 +9,11 @@ import (
 	"math/rand"
 
 	"github.com/fogleman/gg"
+	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/jdf/todd-again/todd/assets"
 	"github.com/lucasb-eyer/go-colorful"
+	"golang.org/x/image/font"
 )
 
 const (
@@ -36,6 +38,8 @@ type Game struct {
 	// Graphics stuff.
 	gfx         *Graphics
 	frameBuffer *image.RGBA
+	font        *truetype.Font
+	debugFace   font.Face
 
 	// Game state.
 	frames int64
@@ -65,7 +69,9 @@ func (g *Game) Update() error {
 
 	_, wheelY := ebiten.Wheel()
 	if math.Abs(wheelY) > 0.0 {
-		g.camera.ZoomInto(1+(wheelY/5), g.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
+		g.camera.ZoomInto(
+			1+(wheelY*.005),
+			g.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
 	}
 
 	for _, b := range g.boxes {
@@ -87,20 +93,22 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	dc := g.gfx
 
-	dc.SetRGB(0, 0, 0)
+	dc.SetRGB(230, 230, 124)
 	dc.Clear()
 
-	for _, x := range []int{-100, -50, 0, 50, 100} {
-		for _, y := range []int{0, 25, 50, 75} {
-			dc.SetColor(color.RGBA{00, 128, 00, 255})
-			dc.DrawText(g.camera, fmt.Sprintf("%d,%d", x, y), float64(x), float64(y))
-		}
-	}
+	dc.SetFontFace(g.debugFace)
 
 	dc.SetColor(color.White)
 	dc.SetLineWidth(4)
 	dc.DrawLine(g.camera, worldLeft, 0, worldRight, 50)
 	dc.Stroke()
+
+	for _, x := range []int{-100, -50, 0, 50, 100} {
+		for _, y := range []int{0, 25, 50, 75} {
+			dc.SetColor(color.RGBA{00, 170, 00, 255})
+			dc.DrawText(g.camera, fmt.Sprintf("%d,%d", x, y), float64(x), float64(y))
+		}
+	}
 
 	for _, box := range g.boxes {
 		if !g.camera.CanSee(box.bounds) {
@@ -110,27 +118,51 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		dc.FillRect(g.camera, box.bounds)
 	}
 
+	dc.SetColor(color.RGBA{0, 0, 0, 200})
+	dc.FillRectScreen(g.camera, NewRect(2, 2, 120, 24))
+
+	dc.SetColor(color.RGBA{128, 128, 128, 255})
+	dc.DrawTextScreen(g.camera,
+		fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()),
+		4, 18)
+
 	screen.ReplacePixels(g.frameBuffer.Pix)
-	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("TPS: %0.2f\nFPS: %0.2f",
-			ebiten.CurrentTPS(),
-			ebiten.CurrentFPS()))
 }
+
+var (
+	lastW, lastH               int
+	calculatedOw, calculatedOh int
+)
 
 // Layout has a	party with gnomes.
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	w, h := float64(outsideWidth), float64(outsideHeight)
-	if w/h > aspectRatio {
-		w = h * aspectRatio
-	} else {
-		h = w / aspectRatio
+	if outsideWidth != lastW || outsideHeight != lastH {
+		log.Printf("layout %dx%d", outsideWidth, outsideHeight)
+		lastW = outsideWidth
+		lastH = outsideHeight
+		s := ebiten.DeviceScaleFactor()
+		w, h := s*float64(outsideWidth), s*float64(outsideHeight)
+		if w/h > aspectRatio {
+			w = h * aspectRatio
+		} else {
+			h = w / aspectRatio
+		}
+		for w > 2048 || h > 2048 {
+			w *= .5
+			h *= .5
+		}
+		calculatedOw, calculatedOh = int(w), int(h)
+		img := image.NewRGBA(image.Rect(0, 0, calculatedOw, calculatedOh))
+		g.frameBuffer = img
+		g.gfx = &Graphics{Context: *gg.NewContextForRGBA(img)}
+		g.camera.SetScreenRect(NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
+		g.debugFace = truetype.NewFace(g.font, &truetype.Options{
+			Size: 9,
+			DPI:  72 * ebiten.DeviceScaleFactor(),
+		})
+		log.Printf("buffer size: %d, %d", calculatedOw, calculatedOh)
 	}
-	ow, oh := int(w), int(h)
-	img := image.NewRGBA(image.Rect(0, 0, ow, oh))
-	g.frameBuffer = img
-	g.gfx = &Graphics{Context: *gg.NewContextForRGBA(img)}
-	g.camera.SetScreenRect(NewRect(0, 0, float64(w), float64(h)))
-	return ow, oh
+	return calculatedOw, calculatedOh
 }
 
 func initColors() []colorful.Color {
@@ -173,6 +205,9 @@ func Run() {
 	ebiten.SetWindowTitle("Todd")
 	ebiten.SetScreenClearedEveryFrame(false) // we blit the whole frame anyway
 	img := image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
+
+	font := assets.GetFontOrDie("InstructionBold.ttf")
+
 	g := &Game{
 		gfx: &Graphics{Context: *gg.NewContextForRGBA(img)},
 		camera: NewCamera(
@@ -182,6 +217,8 @@ func Run() {
 		frames:      0,
 		boxes:       initBoxes(),
 		throbColors: initColors(),
+		font:        font,
+		debugFace:   truetype.NewFace(font, &truetype.Options{Size: 72}),
 	}
 	g.camera.SetInvertY(true)
 	if err := ebiten.RunGame(g); err != nil {
