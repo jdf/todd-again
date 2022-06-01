@@ -14,6 +14,9 @@ type Camera struct {
 	displayToWorld *Affine
 
 	invertY bool
+
+	// hack to limit zoom
+	zoom float64
 }
 
 // Copy returns a deep copy of the camera.
@@ -25,14 +28,15 @@ func (c *Camera) Copy() *Camera {
 }
 
 func (c *Camera) String() string {
-	return fmt.Sprintf("Camera[%s -> %s]", c.worldRect, c.screenRect)
+	return fmt.Sprintf("Camera[%s -> %s @ %0.2f]", c.worldRect, c.screenRect, c.zoom)
 }
 
-// NewCamera constructs a View mapped to the complete display area.
+// NewCamera constructs a View mapped to the given display area.
 func NewCamera(worldRect *Rect, screenRect *Rect) *Camera {
 	return &Camera{
 		worldRect:  worldRect.Copy(),
 		screenRect: screenRect.Copy(),
+		zoom:       1,
 	}
 }
 
@@ -75,6 +79,11 @@ func (c *Camera) Zoom(factor float64) {
 
 // ZoomInto scales the camera by the given factor, keeping the given point fixed.
 func (c *Camera) ZoomInto(factor float64, center *Vec2) {
+	newZoom := c.zoom * factor
+	if newZoom < 0.1 || newZoom > 10 {
+		return
+	}
+	c.zoom = newZoom
 	zoomer := Compose(
 		Translation(center.Negate()),
 		UniformScale(factor),
