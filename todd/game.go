@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"math"
 	"math/rand"
 
 	"github.com/fogleman/gg"
@@ -49,25 +50,22 @@ type Game struct {
 func (g *Game) Update() error {
 	g.frames++
 
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) && g.camera.Left() > worldLeft-5 {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 		g.camera.Pan(&Vec2{-2, 0})
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) && g.camera.Right() < worldRight+5 {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 		g.camera.Pan(&Vec2{2, 0})
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		if ebiten.IsKeyPressed(ebiten.KeyMeta) {
-			g.camera.Zoom(0.95)
-		} else {
-			g.camera.Pan(&Vec2{0, 2})
-		}
+		g.camera.Pan(&Vec2{0, 2})
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		if ebiten.IsKeyPressed(ebiten.KeyMeta) {
-			g.camera.Zoom(1.05)
-		} else {
-			g.camera.Pan(&Vec2{0, -2})
-		}
+		g.camera.Pan(&Vec2{0, -2})
+	}
+
+	_, wheelY := ebiten.Wheel()
+	if math.Abs(wheelY) > 0.0 {
+		g.camera.Zoom(1 + (wheelY / 5))
 	}
 
 	for _, b := range g.boxes {
