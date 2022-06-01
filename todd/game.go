@@ -65,7 +65,7 @@ func (g *Game) Update() error {
 
 	_, wheelY := ebiten.Wheel()
 	if math.Abs(wheelY) > 0.0 {
-		g.camera.Zoom(1 + (wheelY / 5))
+		g.camera.ZoomInto(1+(wheelY/5), g.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
 	}
 
 	for _, b := range g.boxes {

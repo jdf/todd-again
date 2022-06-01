@@ -188,8 +188,8 @@ func UniformScale(s float64) *Affine {
 	}
 }
 
-// Translate creates a translation transform.
-func Translate(t *Vec2) *Affine {
+// Translation creates a translation transform.
+func Translation(t *Vec2) *Affine {
 	return &Affine{
 		1, 0, t.X,
 		0, 1, t.Y,
@@ -208,7 +208,7 @@ func Rotation(angle float64) *Affine {
 
 // RotationAround returns a transform that rotates around the given point.
 func RotationAround(angle float64, p *Vec2) *Affine {
-	return Compose(Translate(&Vec2{-p.X, -p.Y}), Rotation(angle), Translate(&Vec2{p.X, p.Y}))
+	return Compose(Translation(&Vec2{-p.X, -p.Y}), Rotation(angle), Translation(&Vec2{p.X, p.Y}))
 }
 
 // Copy returns a copy of this affine transform.
@@ -216,6 +216,15 @@ func (m *Affine) Copy() *Affine {
 	return &Affine{
 		m[0], m[1], m[2],
 		m[3], m[4], m[5],
+	}
+}
+
+// Inverse returns the inverse of this affine transform.
+func (m *Affine) Inverse() *Affine {
+	oneOverDet := 1.0 / (m[0]*m[4] - m[1]*m[3])
+	return &Affine{
+		m[4] * oneOverDet, -m[1] * oneOverDet, (m[1]*m[5] - m[2]*m[4]) * oneOverDet,
+		-m[3] * oneOverDet, m[0] * oneOverDet, (m[2]*m[3] - m[0]*m[5]) * oneOverDet,
 	}
 }
 
@@ -276,8 +285,8 @@ func (m *Affine) TransformVec2(p *Vec2) *Vec2 {
 	}
 }
 
-// TransformXY applies the affine transform to the given coordinate.
-func (m *Affine) TransformXY(x, y float64) (float64, float64) {
+// Transform applies the affine transform to the given coordinate.
+func (m *Affine) Transform(x, y float64) (float64, float64) {
 	return m[0]*x + m[1]*y + m[2], m[3]*x + m[4]*y + m[5]
 
 }

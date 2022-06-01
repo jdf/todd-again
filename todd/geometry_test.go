@@ -34,7 +34,7 @@ func TestScale(t *testing.T) {
 func TestTranslation(t *testing.T) {
 	for _, p := range []*Vec2{{0, 0}, {1, 2}, {2, 1}, {0, 0}, {4.1, 1.4}} {
 		for _, v := range []*Vec2{{0, 0}, {1, 2}, {2, 1}, {-1, -1.5}} {
-			m := Translate(v)
+			m := Translation(v)
 			want := Vec2{v.X + p.X, v.Y + p.Y}
 			got := *m.TransformVec2(p)
 			if got != want {
@@ -85,7 +85,7 @@ type labeledAffine struct {
 
 var transforms = []interface{}{
 	labeledAffine{"identity", Identity()},
-	labeledAffine{"translate(1, 2)", Translate(&Vec2{1, 2})},
+	labeledAffine{"translate(1, 2)", Translation(&Vec2{1, 2})},
 	labeledAffine{"scale(3, 4)", Scale(&Vec2{3, 4})},
 	labeledAffine{"rotate(-π/2)", Rotation(-math.Pi / 2)},
 }
@@ -103,6 +103,25 @@ func TestCompose(t *testing.T) {
 					*roundVec2(got), *roundVec2(want),
 					first.label, *roundVec2(first.a.TransformVec2(p)),
 					second.label)
+			}
+		}
+	}
+}
+
+func TestInverse(t *testing.T) {
+	for _, p := range []*Vec2{{1, 2}, {2, 1}, {0, 0}} {
+		for affinePair := range cartesian.Iter(transforms, transforms) {
+			first := affinePair[0].(labeledAffine)
+			second := affinePair[1].(labeledAffine)
+
+			there := Compose(first.a, second.a)
+			back := there.Inverse()
+			q := there.TransformVec2(p)
+			got := back.TransformVec2(q)
+			if Distance(got, p) > epsilon {
+				t.Errorf(
+					"inverse of %s then %s gives %v, want %v",
+					first.label, second.label, *roundVec2(got), *roundVec2(p))
 			}
 		}
 	}
