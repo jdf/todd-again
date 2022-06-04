@@ -7,8 +7,7 @@ import (
 	"github.com/golang/freetype/truetype"
 )
 
-//go:embed MoonFlowerBold.ttf
-//go:embed InstructionBold.ttf
+//go:embed *.ttf
 var assets embed.FS
 
 // GetOrDie returns the named asset, or panics if it doesn't exist.

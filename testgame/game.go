@@ -1,4 +1,4 @@
-package todd
+package testgame
 
 import (
 	"fmt"
@@ -11,10 +11,15 @@ import (
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jdf/todd-again/todd"
 	"github.com/jdf/todd-again/todd/assets"
 	"github.com/lucasb-eyer/go-colorful"
 	"golang.org/x/image/font"
 )
+
+type vec = todd.Vec2
+type rect = todd.Rect
+type camera = todd.Camera
 
 const (
 	screenWidth  = 1200
@@ -28,7 +33,7 @@ const (
 
 // Box is a box is a box is a box. Loveliness extreme.
 type Box struct {
-	bounds         *Rect
+	bounds         *rect
 	colorIndex     int
 	colorDirection int
 }
@@ -36,7 +41,7 @@ type Box struct {
 // Game is a game state.
 type Game struct {
 	// Graphics stuff.
-	gfx         *Graphics
+	gfx         *todd.Graphics
 	frameBuffer *image.RGBA
 	font        *truetype.Font
 	debugFace   font.Face
@@ -45,7 +50,7 @@ type Game struct {
 	frames int64
 
 	// Entities
-	camera      *Camera
+	camera      *camera
 	boxes       []*Box
 	throbColors []colorful.Color
 }
@@ -55,23 +60,23 @@ func (g *Game) Update() error {
 	g.frames++
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		g.camera.Pan(&Vec2{-2, 0})
+		g.camera.Pan(&vec{-2, 0})
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		g.camera.Pan(&Vec2{2, 0})
+		g.camera.Pan(&vec{2, 0})
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		g.camera.Pan(&Vec2{0, 2})
+		g.camera.Pan(&vec{0, 2})
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		g.camera.Pan(&Vec2{0, -2})
+		g.camera.Pan(&vec{0, -2})
 	}
 
 	_, wheelY := ebiten.Wheel()
 	if math.Abs(wheelY) > 0.0 {
 		g.camera.ZoomInto(
 			1+(wheelY*.005),
-			g.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
+			g.camera.ToWorldVec2(todd.Vec(ebiten.CursorPosition())))
 	}
 
 	for _, b := range g.boxes {
@@ -119,7 +124,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	dc.SetColor(color.RGBA{0, 0, 0, 200})
-	dc.FillRectScreen(g.camera, NewRect(2, 2, 120, 24))
+	dc.FillRectScreen(g.camera, todd.NewRect(2, 2, 120, 24))
 
 	dc.SetColor(color.RGBA{128, 128, 128, 255})
 	dc.DrawTextScreen(g.camera,
@@ -154,8 +159,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 		calculatedOw, calculatedOh = int(w), int(h)
 		img := image.NewRGBA(image.Rect(0, 0, calculatedOw, calculatedOh))
 		g.frameBuffer = img
-		g.gfx = &Graphics{Context: *gg.NewContextForRGBA(img)}
-		g.camera.SetScreenRect(NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
+		g.gfx = &todd.Graphics{Context: *gg.NewContextForRGBA(img)}
+		g.camera.SetScreenRect(todd.NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
 		g.debugFace = truetype.NewFace(g.font, &truetype.Options{
 			Size: 9,
 			DPI:  72 * ebiten.DeviceScaleFactor(),
@@ -191,7 +196,7 @@ func initBoxes() []*Box {
 	for i := 0; i < boxCount; i++ {
 		x := worldLeft + boxGap*((float64)(i+1))
 		boxes = append(boxes, &Box{
-			bounds:         NewRect(x, 10, x+boxWidth, 10+boxWidth),
+			bounds:         todd.NewRect(x, 10, x+boxWidth, 10+boxWidth),
 			colorIndex:     rand.Intn(60),
 			colorDirection: 1,
 		})
@@ -209,10 +214,10 @@ func Run() {
 	font := assets.GetFontOrDie("InstructionBold.ttf")
 
 	g := &Game{
-		gfx: &Graphics{Context: *gg.NewContextForRGBA(img)},
-		camera: NewCamera(
-			NewRect(worldLeft, -1, worldLeft+100, 51),
-			NewRect(0, 0, screenWidth, screenHeight)),
+		gfx: &todd.Graphics{Context: *gg.NewContextForRGBA(img)},
+		camera: todd.NewCamera(
+			todd.NewRect(worldLeft, -1, worldLeft+100, 51),
+			todd.NewRect(0, 0, screenWidth, screenHeight)),
 		frameBuffer: img,
 		frames:      0,
 		boxes:       initBoxes(),
