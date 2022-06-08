@@ -6,6 +6,7 @@ require (
 	github.com/fogleman/gg v1.3.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten/v2 v2.3.3
+	github.com/jakecoffman/cp v1.1.0
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/schwarmco/go-cartesian-product v0.0.0-20180515110546-d5ee747a6dc9
 	golang.org/x/exp v0.0.0-20220602145555-4a0574d9293f

@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"math"
 	"time"
 
 	"github.com/fogleman/gg"
@@ -37,16 +38,47 @@ type Game struct {
 	lastUpdate         time.Time
 	lastUpdateDebugLog time.Time
 
-	// Entities
 	camera *Camera
+	level  *Level
 }
 
 // Update updates the state of the game.
 func (game *Game) Update() error {
 	now := time.Now()
-	//dt := now.Sub(game.lastUpdate)
+	dt := now.Sub(game.lastUpdate)
+
+	frameState := &FrameState{
+		Camera: game.camera,
+		Input:  GetInputState(),
+		Now:    now,
+		DeltaT: dt.Seconds(),
+	}
+	game.level.Update(frameState)
 
 	game.lastUpdate = now
+
+	type vec = Vec2
+	g := game
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		g.camera.Pan(&vec{-2, 0})
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		g.camera.Pan(&vec{2, 0})
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		g.camera.Pan(&vec{0, 2})
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		g.camera.Pan(&vec{0, -2})
+	}
+
+	_, wheelY := ebiten.Wheel()
+	if math.Abs(wheelY) > 0.0 {
+		g.camera.ZoomInto(
+			1+(wheelY*.005),
+			g.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
+	}
+
 	return nil
 }
 
@@ -69,6 +101,7 @@ func (game *Game) Draw(screen *ebiten.Image) {
 	g.SetRGB(0, 0, 0)
 	g.Clear()
 
+	game.level.Draw(g, game.camera)
 	if debug {
 		drawDebugInfo(game, game.camera)
 	}
@@ -135,6 +168,7 @@ func Run() {
 		debugFace:          truetype.NewFace(font, &truetype.Options{Size: 72}),
 		lastUpdate:         time.Now(),
 		lastUpdateDebugLog: time.Now(),
+		level:              Level1(),
 	}
 	game.camera.SetInvertY(true)
 	if err := ebiten.RunGame(game); err != nil {
