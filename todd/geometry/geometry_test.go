@@ -1,4 +1,4 @@
-package todd
+package geometry
 
 import (
 	"math"

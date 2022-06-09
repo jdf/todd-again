@@ -12,6 +12,11 @@ import (
 	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/todd/assets"
+	"github.com/jdf/todd-again/todd/camera"
+	"github.com/jdf/todd-again/todd/frame"
+	"github.com/jdf/todd-again/todd/geometry"
+	"github.com/jdf/todd-again/todd/graphics"
+	"github.com/jdf/todd-again/todd/input"
 	"golang.org/x/image/font"
 )
 
@@ -30,7 +35,7 @@ const (
 // Game is a game state.
 type Game struct {
 	// Graphics stuff.
-	gfx         *Graphics
+	gfx         *graphics.Context
 	frameBuffer *image.RGBA
 	font        *truetype.Font
 	debugFace   font.Face
@@ -38,7 +43,7 @@ type Game struct {
 	lastUpdate         time.Time
 	lastUpdateDebugLog time.Time
 
-	camera *Camera
+	camera *camera.Camera
 	level  *Level
 }
 
@@ -47,9 +52,9 @@ func (game *Game) Update() error {
 	now := time.Now()
 	dt := now.Sub(game.lastUpdate)
 
-	frameState := &FrameState{
+	frameState := &frame.State{
 		Camera: game.camera,
-		Input:  GetInputState(),
+		Input:  input.GetState(),
 		Now:    now,
 		DeltaT: dt.Seconds(),
 	}
@@ -57,36 +62,36 @@ func (game *Game) Update() error {
 
 	game.lastUpdate = now
 
-	type vec = Vec2
-	g := game
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		g.camera.Pan(&vec{-2, 0})
+	type vec = geometry.Vec2
+	cam := game.camera
+	if frameState.Input.Left {
+		cam.Pan(&vec{-2, 0})
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		g.camera.Pan(&vec{2, 0})
+	if frameState.Input.Right {
+		cam.Pan(&vec{2, 0})
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		g.camera.Pan(&vec{0, 2})
+	if frameState.Input.Up {
+		cam.Pan(&vec{0, 2})
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		g.camera.Pan(&vec{0, -2})
+	if frameState.Input.Down {
+		cam.Pan(&vec{0, -2})
 	}
 
 	_, wheelY := ebiten.Wheel()
 	if math.Abs(wheelY) > 0.0 {
-		g.camera.ZoomInto(
+		cam.ZoomInto(
 			1+(wheelY*.005),
-			g.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
+			cam.ToWorldVec2(geometry.Vec(ebiten.CursorPosition())))
 	}
 
 	return nil
 }
 
-func drawDebugInfo(game *Game, camera *Camera) {
+func drawDebugInfo(game *Game, camera *camera.Camera) {
 	g := game.gfx
 	g.SetFontFace(game.debugFace)
 	g.SetColor(color.RGBA{0, 0, 0, 200})
-	g.FillRectScreen(camera, NewRect(2, 2, 120, 24))
+	g.FillRectScreen(camera, geometry.NewRect(2, 2, 120, 24))
 
 	g.SetColor(color.RGBA{128, 128, 128, 255})
 	g.DrawTextScreen(camera,
@@ -138,8 +143,8 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 		calculatedOw, calculatedOh = int(w), int(h)
 		img := image.NewRGBA(image.Rect(0, 0, calculatedOw, calculatedOh))
 		game.frameBuffer = img
-		game.gfx = &Graphics{Context: *gg.NewContextForRGBA(img)}
-		game.camera.SetScreenRect(NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
+		game.gfx = &graphics.Context{Context: *gg.NewContextForRGBA(img)}
+		game.camera.SetScreenRect(geometry.NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
 		game.debugFace = truetype.NewFace(game.font, &truetype.Options{
 			Size: 9,
 			DPI:  72 * ebiten.DeviceScaleFactor(),
@@ -159,10 +164,10 @@ func Run() {
 	font := assets.GetFontOrDie("InstructionBold.ttf")
 
 	game := &Game{
-		gfx: &Graphics{Context: *gg.NewContextForRGBA(img)},
-		camera: NewCamera(
-			NewRect(worldLeft, -1, worldLeft+100, 51),
-			NewRect(0, 0, screenWidth, screenHeight)),
+		gfx: &graphics.Context{Context: *gg.NewContextForRGBA(img)},
+		camera: camera.New(
+			geometry.NewRect(worldLeft, -1, worldLeft+100, 51),
+			geometry.NewRect(0, 0, screenWidth, screenHeight)),
 		frameBuffer:        img,
 		font:               font,
 		debugFace:          truetype.NewFace(font, &truetype.Options{Size: 72}),
