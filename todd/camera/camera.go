@@ -73,8 +73,8 @@ func (c *Camera) Bottom() float64 {
 }
 
 // Pan moves the camera by the given amount.
-func (c *Camera) Pan(v *geometry.Vec2) {
-	c.worldRect.AddToSelf(v)
+func (c *Camera) Pan(x, y float64) {
+	c.worldRect.AddToSelf(&geometry.Vec2{x, y})
 	c.invalidate()
 }
 

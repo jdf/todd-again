@@ -62,26 +62,24 @@ func (game *Game) Update() error {
 
 	game.lastUpdate = now
 
-	type vec = geometry.Vec2
-	cam := game.camera
 	if frameState.Input.Left {
-		cam.Pan(&vec{-2, 0})
+		game.camera.Pan(-2, 0)
 	}
 	if frameState.Input.Right {
-		cam.Pan(&vec{2, 0})
+		game.camera.Pan(2, 0)
 	}
 	if frameState.Input.Up {
-		cam.Pan(&vec{0, 2})
+		game.camera.Pan(0, 2)
 	}
 	if frameState.Input.Down {
-		cam.Pan(&vec{0, -2})
+		game.camera.Pan(0, -2)
 	}
 
 	_, wheelY := ebiten.Wheel()
 	if math.Abs(wheelY) > 0.0 {
-		cam.ZoomInto(
+		game.camera.ZoomInto(
 			1+(wheelY*.005),
-			cam.ToWorldVec2(geometry.Vec(ebiten.CursorPosition())))
+			game.camera.ToWorldVec2(geometry.Vec(ebiten.CursorPosition())))
 	}
 
 	return nil
