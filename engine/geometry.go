@@ -86,10 +86,14 @@ func NewRectFromCorners(corner1, corner2 *Vec2) *Rect {
 
 // NewRect creates a new Rect from the given axis-aligned lines, enforcing the
 // ordering of the corners.
-func NewRect(left, bottom, right, top float64) *Rect {
+func NewRect[T Numeric](left, bottom, right, top T) *Rect {
+	fl := float64(left)
+	fr := float64(right)
+	ft := float64(top)
+	fb := float64(bottom)
 	return &Rect{
-		Min: Vec2{math.Min(left, right), math.Min(bottom, top)},
-		Max: Vec2{math.Max(left, right), math.Max(bottom, top)},
+		Min: Vec2{math.Min(fl, fr), math.Min(fb, ft)},
+		Max: Vec2{math.Max(fl, fr), math.Max(fb, ft)},
 	}
 }
 

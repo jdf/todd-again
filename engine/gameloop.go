@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"math"
 	"time"
 
 	"github.com/fogleman/gg"
@@ -16,158 +15,139 @@ import (
 )
 
 const (
-	screenWidth  = 1600
-	screenHeight = 900
-
-	aspectRatio = float64(screenWidth) / float64(screenHeight)
-
-	worldLeft  = -100.0
-	worldRight = 100.0
-
-	debug = true
+	// Fixed timestep for physics simulation, independent of ebiten update frequency.
+	tick                        = 1 / 180.0
+	maxOffscreenBufferDimension = 2048
 )
 
-// Game is a game state.
-type Game struct {
+const debug = true
+
+type windowInfo struct {
+	// width to height ratio of the game's desired viewport
+	aspectRatio float64
+
+	// Managing layout.
+	// lastW and lastH are the last device pixel width and height requested
+	// during a Layout call. Because we do expensive things when the size changes,
+	// we fast-return if the size hasn't changed.
+	lastW, lastH int
+	// bufW and bufH are the actual width and height of the offscreen buffer. They will
+	// have the right aspect ratio, but may be smaller than the lastW and lastH.
+	bufW, bufH int
+}
+
+type ebitenGame struct {
+	userGame Game
+
+	window windowInfo
+
 	// Graphics stuff.
-	gfx         *Context
+	gfx         *Graphics
 	frameBuffer *image.RGBA
 	debugFont   *truetype.Font
 	debugFace   font.Face
 
-	lastUpdate         time.Time
-	lastUpdateDebugLog time.Time
-
-	camera *Camera
-	level  *Level
+	// We maintain an accumulator of excess time remaining after going through
+	// physics ticks.
+	accumulator          float64
+	lastEbitenUpdate     time.Time
+	lastWorldTimeSeconds float64
 }
 
-// Update updates the state of the game.
-func (game *Game) Update() error {
+// Update is called periodically by ebiten. We use it to run physics
+// simulation and update the game state, likely breaking each ebiten
+// update into multiple physics ticks.
+func (game *ebitenGame) Update() error {
 	now := time.Now()
-	dt := now.Sub(game.lastUpdate)
+	dt := now.Sub(game.lastEbitenUpdate)
+	game.lastEbitenUpdate = now
 
-	frameState := &FrameState{
-		Camera: game.camera,
-		Input:  GetInputState(),
-		Now:    now,
-		DeltaT: dt.Seconds(),
-	}
-	game.level.Update(frameState)
-
-	game.lastUpdate = now
-
-	if frameState.Input.Left {
-		game.camera.Pan(-2, 0)
-	}
-	if frameState.Input.Right {
-		game.camera.Pan(2, 0)
-	}
-	if frameState.Input.Up {
-		game.camera.Pan(0, 2)
-	}
-	if frameState.Input.Down {
-		game.camera.Pan(0, -2)
+	us := &UpdateState{
+		Input:        GetInputState(),
+		DeltaSeconds: tick,
 	}
 
-	_, wheelY := ebiten.Wheel()
-	if math.Abs(wheelY) > 0.0 {
-		game.camera.ZoomInto(
-			1+(wheelY*.005),
-			game.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
+	for game.accumulator += dt.Seconds(); game.accumulator >= tick; game.accumulator -= tick {
+		us.NowSeconds = game.lastWorldTimeSeconds + tick
+		game.userGame.Update(us)
+		game.lastWorldTimeSeconds += tick
 	}
 
 	return nil
 }
 
-func drawDebugInfo(game *Game, camera *Camera) {
+func drawDebugInfo(game *ebitenGame) {
 	g := game.gfx
 	g.SetFontFace(game.debugFace)
 	g.SetColor(color.RGBA{0, 0, 0, 200})
-	g.FillRectScreen(camera, NewRect(2, 2, 120, 24))
+	g.FillRectScreen(NewRect(2, 2, 120, 24))
 
 	g.SetColor(color.RGBA{128, 128, 128, 255})
-	g.DrawTextScreen(camera,
+	g.DrawTextScreen(
 		fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()),
 		4, 18)
 }
 
 // Draw draws the game screen in ebiten.
-func (game *Game) Draw(screen *ebiten.Image) {
+func (game *ebitenGame) Draw(screen *ebiten.Image) {
 	g := game.gfx
 
 	g.SetRGB(0, 0, 0)
 	g.Clear()
+	game.userGame.Draw(g)
 
-	game.level.Draw(g, game.camera)
 	if debug {
-		drawDebugInfo(game, game.camera)
+		drawDebugInfo(game)
 	}
-
 	screen.ReplacePixels(game.frameBuffer.Pix)
 }
 
-const (
-	maxOffscreenBufferDimension = 2048
-)
-
-var (
-	lastW, lastH               int
-	calculatedOw, calculatedOh int
-)
-
 // Layout has a	party with gnomes.
-func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	if outsideWidth != lastW || outsideHeight != lastH {
+func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
+	win := &game.window
+	if outsideWidth != win.lastW || outsideHeight != win.lastH {
 		log.Printf("layout %dx%d", outsideWidth, outsideHeight)
-		lastW = outsideWidth
-		lastH = outsideHeight
+		win.lastW = outsideWidth
+		win.lastH = outsideHeight
 		s := ebiten.DeviceScaleFactor()
 		w, h := s*float64(outsideWidth), s*float64(outsideHeight)
-		if w/h > aspectRatio {
-			w = h * aspectRatio
+		if w/h > win.aspectRatio {
+			w = h * win.aspectRatio
 		} else {
-			h = w / aspectRatio
+			h = w / win.aspectRatio
 		}
 		for w > maxOffscreenBufferDimension || h > maxOffscreenBufferDimension {
 			w *= .5
 			h *= .5
 		}
-		calculatedOw, calculatedOh = int(w), int(h)
-		img := image.NewRGBA(image.Rect(0, 0, calculatedOw, calculatedOh))
+		win.bufW, win.bufH = int(w), int(h)
+		img := image.NewRGBA(image.Rect(0, 0, win.bufW, win.bufH))
 		game.frameBuffer = img
-		game.gfx = &Context{Context: *gg.NewContextForRGBA(img)}
-		game.camera.SetScreenRect(NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
+		game.gfx = &Graphics{Context: *gg.NewContextForRGBA(img)}
+		game.userGame.Resize(win.bufW, win.bufH)
 		game.debugFace = truetype.NewFace(game.debugFont, &truetype.Options{
 			Size: 9,
 			DPI:  72 * ebiten.DeviceScaleFactor(),
 		})
-		log.Printf("buffer size: %d, %d", calculatedOw, calculatedOh)
+		log.Printf("buffer size: %d, %d", win.bufW, win.bufH)
 	}
-	return calculatedOw, calculatedOh
+	return win.bufW, win.bufH
 }
 
 // RunGameLoop initializes and runs the game.
-func RunGameLoop() {
-	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Todd")
+func RunGameLoop(userGame Game, width, height int, title string) {
+	ebiten.SetWindowSize(width, height)
+	ebiten.SetWindowTitle(title)
 	ebiten.SetScreenClearedEveryFrame(false) // we blit the whole frame anyway
-	img := image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 
 	font := dbgassets.GetFontOrDie("InstructionBold.ttf")
 
-	game := &Game{
-		gfx: &Context{Context: *gg.NewContextForRGBA(img)},
-		camera: NewCamera(
-			NewRect(worldLeft, -1, worldLeft+100, 51),
-			NewRect(0, 0, screenWidth, screenHeight),
-			FlipYAxis),
-		frameBuffer:        img,
-		debugFont:          font,
-		debugFace:          truetype.NewFace(font, &truetype.Options{Size: 72}),
-		lastUpdate:         time.Now(),
-		lastUpdateDebugLog: time.Now(),
-		level:              Level1(),
+	game := &ebitenGame{
+		userGame:         userGame,
+		window:           windowInfo{aspectRatio: float64(width) / float64(height)},
+		debugFont:        font,
+		debugFace:        truetype.NewFace(font, &truetype.Options{Size: 72}),
+		lastEbitenUpdate: time.Now(),
 	}
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
