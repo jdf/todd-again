@@ -1,4 +1,4 @@
-package testgame
+package game
 
 import (
 	"image/color"
@@ -6,8 +6,6 @@ import (
 	"github.com/jakecoffman/cp"
 	"github.com/jdf/todd-again/engine"
 )
-
-const debugSpace = true
 
 type Level struct {
 	space    *cp.Space
@@ -24,13 +22,11 @@ func (level *Level) Resize(w, h int) {
 }
 
 func (level *Level) Draw(g *engine.Graphics) {
-	if debugSpace {
-		level.space.StaticBody.EachShape(func(shape *cp.Shape) {
-			g.SetColor(color.RGBA{0xFF, 0, 0, 0xFF})
-			bb := shape.BB()
-			g.FillRect(level.camera, engine.NewRect(bb.L-.01, bb.B-.01, bb.R+.01, bb.T+.01))
-		})
-	}
+	level.space.StaticBody.EachShape(func(shape *cp.Shape) {
+		g.SetColor(color.RGBA{0xFF, 0, 0, 0xFF})
+		bb := shape.BB()
+		g.FillRect(level.camera, engine.NewRect(bb.L-.01, bb.B-.01, bb.R+.01, bb.T+.01))
+	})
 	for _, entity := range level.entities {
 		entity.Draw(g, level.camera)
 	}
@@ -41,7 +37,7 @@ func (level *Level) Update(s *engine.UpdateState) {
 	for _, entity := range level.entities {
 		entity.Update(s, s.DeltaSeconds)
 	}
-	box := level.entities[0].(*engine.Box)
+	box := level.entities[0].(*Todd)
 	onGround := box.Bounds().Min.Y < .01
 	if s.Input.Spacebar {
 		jump := 5
@@ -54,10 +50,11 @@ func (level *Level) Update(s *engine.UpdateState) {
 	if onGround {
 		scootch = 20
 	}
-	if s.Input.Left {
+	const maxSpeed = 30
+	if s.Input.Left && box.Velocity().X > -maxSpeed {
 		box.Impulse(engine.Vec(-scootch, 0))
 	}
-	if s.Input.Right {
+	if s.Input.Right && box.Velocity().X < maxSpeed {
 		box.Impulse(engine.Vec(scootch, 0))
 	}
 }
@@ -77,7 +74,20 @@ func standardSpace() *cp.Space {
 		shape.SetElasticity(1)
 		shape.SetFriction(1)
 		shape.SetFilter(cp.SHAPE_FILTER_ALL)
+		shape.SetCollisionType(TODD_GROUND_COLLISION_TYPE)
 	}
+
+	handler := space.NewWildcardCollisionHandler(TODD_GROUND_COLLISION_TYPE)
+	handler.BeginFunc = func(arb *cp.Arbiter, _ *cp.Space, _ interface{}) bool {
+		_, box := arb.Shapes()
+		box.UserData.(*Todd).OnGround = true
+		return true
+	}
+	handler.SeparateFunc = func(arb *cp.Arbiter, _ *cp.Space, _ interface{}) {
+		_, box := arb.Shapes()
+		box.UserData.(*Todd).OnGround = false
+	}
+
 	return space
 }
 
@@ -86,7 +96,7 @@ func Level1() *Level {
 
 	level := &Level{
 		space:    space,
-		entities: []engine.Entity{engine.NewBox(space, engine.Vec(0, 60), engine.Vec(5, 5))},
+		entities: []engine.Entity{NewBox(space, engine.Vec(0, 60), engine.Vec(3, 3))},
 	}
 	return level
 }

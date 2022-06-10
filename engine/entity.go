@@ -9,7 +9,10 @@ type Entity interface {
 	// Absolute time for animations; dt for physics.
 	Update(frameState *UpdateState, dt float64)
 	Draw(*Graphics, *Camera)
+
+	Impulse(*Vec2)
 	Bounds() *Rect
+	Velocity() *Vec2
 
 	RemoveFromSpace(space *cp.Space)
 }

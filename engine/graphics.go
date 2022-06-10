@@ -10,6 +10,14 @@ type Graphics struct {
 	gg.Context
 }
 
+// FillRoundRect fills a world-space round rectangle with the current color.
+func (g *Graphics) FillRoundRect(camera *Camera, r *Rect, screenRadius float64) {
+	sr := camera.ToScreenRect(r)
+
+	g.DrawRoundedRectangle(sr.Left(), sr.Bottom(), sr.Width(), sr.Height(), screenRadius)
+	g.Fill()
+}
+
 // FillRect fills a world-space rectangle with the current color.
 func (g *Graphics) FillRect(camera *Camera, r *Rect) {
 	g.FillRectScreen(camera.ToScreenRect(r))

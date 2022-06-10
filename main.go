@@ -7,7 +7,7 @@ import (
 	"runtime/pprof"
 
 	"github.com/jdf/todd-again/engine"
-	"github.com/jdf/todd-again/testgame"
+	"github.com/jdf/todd-again/game"
 )
 
 func main() {
@@ -25,5 +25,5 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	engine.RunGameLoop(testgame.Level1(), 1600, 900, "Todd Again")
+	engine.RunGameLoop(game.Level1(), 1600, 900, "Todd Again")
 }
