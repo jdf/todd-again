@@ -1,4 +1,4 @@
-package testgame
+package engine
 
 import (
 	"fmt"
@@ -13,14 +13,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine/assets"
 	"github.com/jdf/todd-again/engine/camera"
-	"github.com/jdf/todd-again/engine/geometry"
-	"github.com/jdf/todd-again/engine/graphics"
 	"github.com/lucasb-eyer/go-colorful"
 	"golang.org/x/image/font"
 )
 
-type vec = geometry.Vec2
-type rect = geometry.Rect
+type vec = Vec2
+type rect = Rect
 
 const (
 	screenWidth  = 1200
@@ -42,7 +40,7 @@ type Box struct {
 // Game is a game state.
 type Game struct {
 	// Graphics stuff.
-	gfx         *graphics.Context
+	gfx         *Context
 	frameBuffer *image.RGBA
 	font        *truetype.Font
 	debugFace   font.Face
@@ -51,7 +49,7 @@ type Game struct {
 	frames int64
 
 	// Entities
-	camera      *camera.Camera
+	camera      *Camera
 	boxes       []*Box
 	throbColors []colorful.Color
 }
@@ -77,7 +75,7 @@ func (g *Game) Update() error {
 	if math.Abs(wheelY) > 0.0 {
 		g.camera.ZoomInto(
 			1+(wheelY*.005),
-			g.camera.ToWorldVec2(geometry.Vec(ebiten.CursorPosition())))
+			g.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
 	}
 
 	for _, b := range g.boxes {
@@ -125,7 +123,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	dc.SetColor(color.RGBA{0, 0, 0, 200})
-	dc.FillRectScreen(g.camera, geometry.NewRect(2, 2, 120, 24))
+	dc.FillRectScreen(g.camera, NewRect(2, 2, 120, 24))
 
 	dc.SetColor(color.RGBA{128, 128, 128, 255})
 	dc.DrawTextScreen(g.camera,
@@ -160,8 +158,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 		calculatedOw, calculatedOh = int(w), int(h)
 		img := image.NewRGBA(image.Rect(0, 0, calculatedOw, calculatedOh))
 		g.frameBuffer = img
-		g.gfx = &graphics.Context{Context: *gg.NewContextForRGBA(img)}
-		g.camera.SetScreenRect(geometry.NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
+		g.gfx = &Context{Context: *gg.NewContextForRGBA(img)}
+		g.camera.SetScreenRect(NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
 		g.debugFace = truetype.NewFace(g.font, &truetype.Options{
 			Size: 9,
 			DPI:  72 * ebiten.DeviceScaleFactor(),
@@ -197,7 +195,7 @@ func initBoxes() []*Box {
 	for i := 0; i < boxCount; i++ {
 		x := worldLeft + boxGap*((float64)(i+1))
 		boxes = append(boxes, &Box{
-			bounds:         geometry.NewRect(x, 10, x+boxWidth, 10+boxWidth),
+			bounds:         NewRect(x, 10, x+boxWidth, 10+boxWidth),
 			colorIndex:     rand.Intn(60),
 			colorDirection: 1,
 		})
@@ -215,10 +213,10 @@ func Run() {
 	font := assets.GetFontOrDie("InstructionBold.ttf")
 
 	g := &Game{
-		gfx: &graphics.Context{Context: *gg.NewContextForRGBA(img)},
+		gfx: &Context{Context: *gg.NewContextForRGBA(img)},
 		camera: camera.New(
-			geometry.NewRect(worldLeft, -1, worldLeft+100, 51),
-			geometry.NewRect(0, 0, screenWidth, screenHeight)),
+			NewRect(worldLeft, -1, worldLeft+100, 51),
+			NewRect(0, 0, screenWidth, screenHeight)),
 		frameBuffer: img,
 		frames:      0,
 		boxes:       initBoxes(),

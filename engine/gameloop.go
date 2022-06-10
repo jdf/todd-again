@@ -11,12 +11,7 @@ import (
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/jdf/todd-again/engine/camera"
 	"github.com/jdf/todd-again/engine/dbgassets"
-	"github.com/jdf/todd-again/engine/frame"
-	"github.com/jdf/todd-again/engine/geometry"
-	"github.com/jdf/todd-again/engine/graphics"
-	"github.com/jdf/todd-again/engine/input"
 	"golang.org/x/image/font"
 )
 
@@ -35,7 +30,7 @@ const (
 // Game is a game state.
 type Game struct {
 	// Graphics stuff.
-	gfx         *graphics.Context
+	gfx         *Context
 	frameBuffer *image.RGBA
 	debugFont   *truetype.Font
 	debugFace   font.Face
@@ -43,7 +38,7 @@ type Game struct {
 	lastUpdate         time.Time
 	lastUpdateDebugLog time.Time
 
-	camera *camera.Camera
+	camera *Camera
 	level  *Level
 }
 
@@ -52,9 +47,9 @@ func (game *Game) Update() error {
 	now := time.Now()
 	dt := now.Sub(game.lastUpdate)
 
-	frameState := &frame.State{
+	frameState := &FrameState{
 		Camera: game.camera,
-		Input:  input.GetState(),
+		Input:  GetInputState(),
 		Now:    now,
 		DeltaT: dt.Seconds(),
 	}
@@ -79,17 +74,17 @@ func (game *Game) Update() error {
 	if math.Abs(wheelY) > 0.0 {
 		game.camera.ZoomInto(
 			1+(wheelY*.005),
-			game.camera.ToWorldVec2(geometry.Vec(ebiten.CursorPosition())))
+			game.camera.ToWorldVec2(Vec(ebiten.CursorPosition())))
 	}
 
 	return nil
 }
 
-func drawDebugInfo(game *Game, camera *camera.Camera) {
+func drawDebugInfo(game *Game, camera *Camera) {
 	g := game.gfx
 	g.SetFontFace(game.debugFace)
 	g.SetColor(color.RGBA{0, 0, 0, 200})
-	g.FillRectScreen(camera, geometry.NewRect(2, 2, 120, 24))
+	g.FillRectScreen(camera, NewRect(2, 2, 120, 24))
 
 	g.SetColor(color.RGBA{128, 128, 128, 255})
 	g.DrawTextScreen(camera,
@@ -141,8 +136,8 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 		calculatedOw, calculatedOh = int(w), int(h)
 		img := image.NewRGBA(image.Rect(0, 0, calculatedOw, calculatedOh))
 		game.frameBuffer = img
-		game.gfx = &graphics.Context{Context: *gg.NewContextForRGBA(img)}
-		game.camera.SetScreenRect(geometry.NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
+		game.gfx = &Context{Context: *gg.NewContextForRGBA(img)}
+		game.camera.SetScreenRect(NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
 		game.debugFace = truetype.NewFace(game.debugFont, &truetype.Options{
 			Size: 9,
 			DPI:  72 * ebiten.DeviceScaleFactor(),
@@ -152,8 +147,8 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return calculatedOw, calculatedOh
 }
 
-// Run initializes and runs the game.
-func Run() {
+// RunGameLoop initializes and runs the game.
+func RunGameLoop() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Todd")
 	ebiten.SetScreenClearedEveryFrame(false) // we blit the whole frame anyway
@@ -162,11 +157,11 @@ func Run() {
 	font := dbgassets.GetFontOrDie("InstructionBold.ttf")
 
 	game := &Game{
-		gfx: &graphics.Context{Context: *gg.NewContextForRGBA(img)},
-		camera: camera.New(
-			geometry.NewRect(worldLeft, -1, worldLeft+100, 51),
-			geometry.NewRect(0, 0, screenWidth, screenHeight),
-			camera.Flip),
+		gfx: &Context{Context: *gg.NewContextForRGBA(img)},
+		camera: NewCamera(
+			NewRect(worldLeft, -1, worldLeft+100, 51),
+			NewRect(0, 0, screenWidth, screenHeight),
+			FlipYAxis),
 		frameBuffer:        img,
 		debugFont:          font,
 		debugFace:          truetype.NewFace(font, &truetype.Options{Size: 72}),

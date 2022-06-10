@@ -1,10 +1,8 @@
-package geometry
+package engine
 
 import (
 	"fmt"
 	"math"
-
-	"github.com/jdf/todd-again/engine/types"
 )
 
 // All geometry takes place on a Cartesian plane where X increases to the right
@@ -17,7 +15,7 @@ type Vec2 struct {
 }
 
 // Vec creates a Vec2 from any 2 numeric values.
-func Vec[T, U types.Numeric](x T, y U) *Vec2 {
+func Vec[T, U Numeric](x T, y U) *Vec2 {
 	return &Vec2{float64(x), float64(y)}
 }
 

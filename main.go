@@ -24,5 +24,5 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	engine.Run()
+	engine.RunGameLoop()
 }

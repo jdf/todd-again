@@ -1,12 +1,8 @@
-package graphics
+package engine
 
 import (
 	"github.com/fogleman/gg"
-	"github.com/jdf/todd-again/engine/camera"
-	"github.com/jdf/todd-again/engine/geometry"
 )
-
-type Camera = camera.Camera
 
 // Context is a graphics context that knows how to manipulate
 // coordinates with a camera.
@@ -15,14 +11,14 @@ type Context struct {
 }
 
 // FillRect fills a world-space rectangle with the current color.
-func (g *Context) FillRect(camera *Camera, r *geometry.Rect) {
+func (g *Context) FillRect(camera *Camera, r *Rect) {
 	tr := camera.ToScreenRect(r)
 	g.Context.DrawRectangle(tr.Left(), tr.Bottom(), tr.Width(), tr.Height())
 	g.Fill()
 }
 
 // FillRectScreen fills a screen-space rectangle with the current color.
-func (g *Context) FillRectScreen(camera *Camera, r *geometry.Rect) {
+func (g *Context) FillRectScreen(camera *Camera, r *Rect) {
 	g.Context.DrawRectangle(r.Left(), r.Bottom(), r.Width(), r.Height())
 	g.Fill()
 }

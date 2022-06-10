@@ -1,20 +1,14 @@
-package camera
+package engine
 
 import (
 	"fmt"
-
-	"github.com/jdf/todd-again/engine/geometry"
-	"github.com/jdf/todd-again/engine/types"
 )
-
-type Rect = geometry.Rect
-type Affine = geometry.Affine
 
 type YAxisPolicy int
 
 const (
-	Flip YAxisPolicy = iota
-	DoNotFlip
+	FlipYAxis YAxisPolicy = iota
+	DoNotFlipYAxis
 )
 
 // Camera transforms between world and screen coordinates.
@@ -45,7 +39,7 @@ func (c *Camera) String() string {
 }
 
 // New constructs a View mapped to the given display area.
-func New(worldRect *Rect, screenRect *Rect, yAxisPolicy YAxisPolicy) *Camera {
+func NewCamera(worldRect *Rect, screenRect *Rect, yAxisPolicy YAxisPolicy) *Camera {
 	return &Camera{
 		worldRect:   worldRect.Copy(),
 		screenRect:  screenRect.Copy(),
@@ -76,7 +70,7 @@ func (c *Camera) Bottom() float64 {
 
 // Pan moves the camera by the given amount.
 func (c *Camera) Pan(x, y float64) {
-	c.worldRect.AddToSelf(&geometry.Vec2{x, y})
+	c.worldRect.AddToSelf(&Vec2{x, y})
 	c.invalidate()
 }
 
@@ -86,16 +80,16 @@ func (c *Camera) Zoom(factor float64) {
 }
 
 // ZoomInto scales the camera by the given factor, keeping the given point fixed.
-func (c *Camera) ZoomInto(factor float64, center *geometry.Vec2) {
+func (c *Camera) ZoomInto(factor float64, center *Vec2) {
 	newZoom := c.zoom * factor
 	if newZoom < 0.1 || newZoom > 10 {
 		return
 	}
 	c.zoom = newZoom
-	zoomer := geometry.Compose(
-		geometry.Translation(center.Negate()),
-		geometry.UniformScale(factor),
-		geometry.Translation(center),
+	zoomer := Compose(
+		Translation(center.Negate()),
+		UniformScale(factor),
+		Translation(center),
 	)
 	c.worldRect = zoomer.TransformRect(c.worldRect)
 	c.invalidate()
@@ -114,16 +108,16 @@ func (c *Camera) SetScreenRect(viewport *Rect) {
 
 func (c *Camera) getTransform() *Affine {
 	if c.worldToDisplay == nil {
-		c.worldToDisplay = geometry.Compose(
-			geometry.Translation(c.worldRect.Center().Negate()),
-			geometry.Scale(c.screenRect.Size().Div(c.worldRect.Size())),
-			geometry.Translation(c.screenRect.Center()),
+		c.worldToDisplay = Compose(
+			Translation(c.worldRect.Center().Negate()),
+			Scale(c.screenRect.Size().Div(c.worldRect.Size())),
+			Translation(c.screenRect.Center()),
 		)
-		if c.yAxisPolicy == Flip {
-			c.worldToDisplay = geometry.Compose(
+		if c.yAxisPolicy == FlipYAxis {
+			c.worldToDisplay = Compose(
 				c.worldToDisplay,
-				geometry.Scale(&geometry.Vec2{1, -1}),
-				geometry.Translation(&geometry.Vec2{0, c.screenRect.Height()}),
+				Scale(&Vec2{1, -1}),
+				Translation(&Vec2{0, c.screenRect.Height()}),
 			)
 		}
 	}
@@ -143,7 +137,7 @@ func (c *Camera) CanSee(rect *Rect) bool {
 }
 
 // ToScreenVec2 converts a point in world space to a point in display space.
-func (c *Camera) ToScreenVec2(worldPos *geometry.Vec2) *geometry.Vec2 {
+func (c *Camera) ToScreenVec2(worldPos *Vec2) *Vec2 {
 	return c.getTransform().TransformVec2(worldPos)
 }
 
@@ -158,7 +152,7 @@ func (c *Camera) ToScreenRect(rect *Rect) *Rect {
 }
 
 // ToWorldVec2 converts a point in display space to a point in world space.
-func (c *Camera) ToWorldVec2(displayPos *geometry.Vec2) *geometry.Vec2 {
+func (c *Camera) ToWorldVec2(displayPos *Vec2) *Vec2 {
 	return c.getInverseTransform().TransformVec2(displayPos)
 }
 
@@ -175,11 +169,11 @@ func (c *Camera) ToWorldRect(rect *Rect) *Rect {
 // Generic functions to transform arbitrary numeric types.
 
 // ScreenToWorld converts a point in display space to a point in world space.
-func ScreenToWorld[T types.Numeric](c *Camera, x, y T) (float64, float64) {
+func ScreenToWorld[T Numeric](c *Camera, x, y T) (float64, float64) {
 	return c.ToWorld(float64(x), float64(y))
 }
 
 // WorldToScreen converts a point in world space to a point in display space.
-func WorldToScreen[T types.Numeric](c *Camera, x, y T) (float64, float64) {
+func WorldToScreen[T Numeric](c *Camera, x, y T) (float64, float64) {
 	return c.ToScreen(float64(x), float64(y))
 }

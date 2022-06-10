@@ -1,13 +1,9 @@
-package entity
+package engine
 
 import (
 	"image/color"
 
 	"github.com/jakecoffman/cp"
-	"github.com/jdf/todd-again/engine/camera"
-	"github.com/jdf/todd-again/engine/frame"
-	"github.com/jdf/todd-again/engine/geometry"
-	"github.com/jdf/todd-again/engine/graphics"
 )
 
 type Box struct {
@@ -15,7 +11,7 @@ type Box struct {
 	shape *cp.Shape
 }
 
-func NewBox(space *cp.Space, pos *geometry.Vec2, size *geometry.Vec2) *Box {
+func NewBox(space *cp.Space, pos *Vec2, size *Vec2) *Box {
 	body := space.AddBody(cp.NewBody(size.X*size.Y, cp.INFINITY))
 	body.SetPosition(cp.Vector{pos.X, pos.Y})
 
@@ -29,16 +25,16 @@ func NewBox(space *cp.Space, pos *geometry.Vec2, size *geometry.Vec2) *Box {
 	}
 }
 
-func (box *Box) Update(frameState *frame.State, dt float64) {}
+func (box *Box) Update(frameState *FrameState, dt float64) {}
 
-func (box *Box) Draw(g *graphics.Context, camera *camera.Camera) {
+func (box *Box) Draw(g *Context, camera *Camera) {
 	g.SetColor(color.White)
 	g.FillRect(camera, box.Bounds())
 }
 
-func (box *Box) Bounds() *geometry.Rect {
+func (box *Box) Bounds() *Rect {
 	bb := box.shape.BB()
-	return geometry.NewRect(bb.L, bb.B, bb.R, bb.T)
+	return NewRect(bb.L, bb.B, bb.R, bb.T)
 }
 
 func (box *Box) RemoveFromSpace(space *cp.Space) {

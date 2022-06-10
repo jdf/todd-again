@@ -1,9 +1,8 @@
-package input
+package engine
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/jdf/todd-again/engine/geometry"
 )
 
 // InputModality represents a input device to provide strokes.
@@ -40,8 +39,8 @@ func (t *TouchGesture) IsJustReleased() bool {
 type Gesture struct {
 	source InputModality
 
-	start   *geometry.Vec2
-	current *geometry.Vec2
+	start   *Vec2
+	current *Vec2
 
 	up bool
 }
@@ -50,8 +49,8 @@ func NewGesture(source InputModality) *Gesture {
 	cx, cy := source.Position()
 	return &Gesture{
 		source:  source,
-		start:   geometry.Vec(cx, cy),
-		current: geometry.Vec(cx, cy),
+		start:   Vec(cx, cy),
+		current: Vec(cx, cy),
 	}
 }
 
@@ -63,17 +62,17 @@ func (s *Gesture) Update() {
 		s.up = true
 		return
 	}
-	s.current = geometry.Vec(s.source.Position())
+	s.current = Vec(s.source.Position())
 }
 
 func (s *Gesture) IsReleased() bool {
 	return s.up
 }
 
-func (s *Gesture) Position() *geometry.Vec2 {
+func (s *Gesture) Position() *Vec2 {
 	return s.current
 }
 
-func (s *Gesture) Delta() *geometry.Vec2 {
+func (s *Gesture) Delta() *Vec2 {
 	return s.current.Minus(s.start)
 }

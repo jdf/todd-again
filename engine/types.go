@@ -1,4 +1,4 @@
-package types
+package engine
 
 import (
 	"golang.org/x/exp/constraints"
