@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jdf/todd-again/todd/types"
+	"github.com/jdf/todd-again/engine/types"
 )
 
 // All geometry takes place on a Cartesian plane where X increases to the right

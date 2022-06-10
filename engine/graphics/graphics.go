@@ -2,8 +2,8 @@ package graphics
 
 import (
 	"github.com/fogleman/gg"
-	"github.com/jdf/todd-again/todd/camera"
-	"github.com/jdf/todd-again/todd/geometry"
+	"github.com/jdf/todd-again/engine/camera"
+	"github.com/jdf/todd-again/engine/geometry"
 )
 
 type Camera = camera.Camera

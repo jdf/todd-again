@@ -1,9 +1,9 @@
-package todd
+package input
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/jdf/todd-again/todd/geometry"
+	"github.com/jdf/todd-again/engine/geometry"
 )
 
 // InputModality represents a input device to provide strokes.

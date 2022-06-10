@@ -1,4 +1,4 @@
-package assets
+package dbgassets
 
 import (
 	"embed"

@@ -4,10 +4,10 @@ import (
 	"image/color"
 
 	"github.com/jakecoffman/cp"
-	"github.com/jdf/todd-again/todd/camera"
-	"github.com/jdf/todd-again/todd/frame"
-	"github.com/jdf/todd-again/todd/geometry"
-	"github.com/jdf/todd-again/todd/graphics"
+	"github.com/jdf/todd-again/engine/camera"
+	"github.com/jdf/todd-again/engine/frame"
+	"github.com/jdf/todd-again/engine/geometry"
+	"github.com/jdf/todd-again/engine/graphics"
 )
 
 type Box struct {

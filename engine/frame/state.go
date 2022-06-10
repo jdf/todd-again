@@ -3,8 +3,8 @@ package frame
 import (
 	"time"
 
-	"github.com/jdf/todd-again/todd/camera"
-	"github.com/jdf/todd-again/todd/input"
+	"github.com/jdf/todd-again/engine/camera"
+	"github.com/jdf/todd-again/engine/input"
 )
 
 type State struct {

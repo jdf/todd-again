@@ -3,23 +3,30 @@ package camera
 import (
 	"fmt"
 
-	"github.com/jdf/todd-again/todd/geometry"
-	"github.com/jdf/todd-again/todd/types"
+	"github.com/jdf/todd-again/engine/geometry"
+	"github.com/jdf/todd-again/engine/types"
 )
 
 type Rect = geometry.Rect
 type Affine = geometry.Affine
+
+type YAxisPolicy int
+
+const (
+	Flip YAxisPolicy = iota
+	DoNotFlip
+)
 
 // Camera transforms between world and screen coordinates.
 type Camera struct {
 	worldRect  *Rect
 	screenRect *Rect
 
+	yAxisPolicy YAxisPolicy
+
 	// Cached transforms from world to display space and back.
 	worldToDisplay *Affine
 	displayToWorld *Affine
-
-	invertY bool
 
 	// hack to limit zoom
 	zoom float64
@@ -38,18 +45,13 @@ func (c *Camera) String() string {
 }
 
 // New constructs a View mapped to the given display area.
-func New(worldRect *Rect, screenRect *Rect) *Camera {
+func New(worldRect *Rect, screenRect *Rect, yAxisPolicy YAxisPolicy) *Camera {
 	return &Camera{
-		worldRect:  worldRect.Copy(),
-		screenRect: screenRect.Copy(),
-		zoom:       1,
+		worldRect:   worldRect.Copy(),
+		screenRect:  screenRect.Copy(),
+		yAxisPolicy: yAxisPolicy,
+		zoom:        1,
 	}
-}
-
-// SetInvertY sets whether the Y axis should be inverted in display space.
-func (c *Camera) SetInvertY(invertY bool) {
-	c.invertY = invertY
-	c.invalidate()
 }
 
 // Left returns the left edge of the world rectangle.
@@ -117,7 +119,7 @@ func (c *Camera) getTransform() *Affine {
 			geometry.Scale(c.screenRect.Size().Div(c.worldRect.Size())),
 			geometry.Translation(c.screenRect.Center()),
 		)
-		if c.invertY {
+		if c.yAxisPolicy == Flip {
 			c.worldToDisplay = geometry.Compose(
 				c.worldToDisplay,
 				geometry.Scale(&geometry.Vec2{1, -1}),

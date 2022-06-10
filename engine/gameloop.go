@@ -1,4 +1,4 @@
-package todd
+package engine
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/jdf/todd-again/todd/assets"
-	"github.com/jdf/todd-again/todd/camera"
-	"github.com/jdf/todd-again/todd/frame"
-	"github.com/jdf/todd-again/todd/geometry"
-	"github.com/jdf/todd-again/todd/graphics"
-	"github.com/jdf/todd-again/todd/input"
+	"github.com/jdf/todd-again/engine/camera"
+	"github.com/jdf/todd-again/engine/dbgassets"
+	"github.com/jdf/todd-again/engine/frame"
+	"github.com/jdf/todd-again/engine/geometry"
+	"github.com/jdf/todd-again/engine/graphics"
+	"github.com/jdf/todd-again/engine/input"
 	"golang.org/x/image/font"
 )
 
@@ -37,7 +37,7 @@ type Game struct {
 	// Graphics stuff.
 	gfx         *graphics.Context
 	frameBuffer *image.RGBA
-	font        *truetype.Font
+	debugFont   *truetype.Font
 	debugFace   font.Face
 
 	lastUpdate         time.Time
@@ -143,7 +143,7 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 		game.frameBuffer = img
 		game.gfx = &graphics.Context{Context: *gg.NewContextForRGBA(img)}
 		game.camera.SetScreenRect(geometry.NewRect(0, 0, float64(calculatedOw), float64(calculatedOh)))
-		game.debugFace = truetype.NewFace(game.font, &truetype.Options{
+		game.debugFace = truetype.NewFace(game.debugFont, &truetype.Options{
 			Size: 9,
 			DPI:  72 * ebiten.DeviceScaleFactor(),
 		})
@@ -159,21 +159,21 @@ func Run() {
 	ebiten.SetScreenClearedEveryFrame(false) // we blit the whole frame anyway
 	img := image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 
-	font := assets.GetFontOrDie("InstructionBold.ttf")
+	font := dbgassets.GetFontOrDie("InstructionBold.ttf")
 
 	game := &Game{
 		gfx: &graphics.Context{Context: *gg.NewContextForRGBA(img)},
 		camera: camera.New(
 			geometry.NewRect(worldLeft, -1, worldLeft+100, 51),
-			geometry.NewRect(0, 0, screenWidth, screenHeight)),
+			geometry.NewRect(0, 0, screenWidth, screenHeight),
+			camera.Flip),
 		frameBuffer:        img,
-		font:               font,
+		debugFont:          font,
 		debugFace:          truetype.NewFace(font, &truetype.Options{Size: 72}),
 		lastUpdate:         time.Now(),
 		lastUpdateDebugLog: time.Now(),
 		level:              Level1(),
 	}
-	game.camera.SetInvertY(true)
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}

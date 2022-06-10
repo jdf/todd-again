@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/jdf/todd-again/todd"
+	"github.com/jdf/todd-again/engine"
 )
 
 func main() {
@@ -24,5 +24,5 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	todd.Run()
+	engine.Run()
 }
