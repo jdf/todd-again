@@ -10,6 +10,7 @@ var WantMouseButtons = true
 var WantMouseWheel = true
 
 type InputState struct {
+	Q                       bool
 	Left, Right, Up, Down   bool
 	Spacebar, Enter, Escape bool
 	MouseLeft, MouseRight   bool
@@ -19,6 +20,7 @@ type InputState struct {
 
 func GetInputState() *InputState {
 	state := &InputState{}
+	state.Q = ebiten.IsKeyPressed(ebiten.KeyQ)
 	if WantArrows {
 		state.Left = ebiten.IsKeyPressed(ebiten.KeyLeft)
 		state.Right = ebiten.IsKeyPressed(ebiten.KeyRight)

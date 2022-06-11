@@ -16,7 +16,7 @@ type Level struct {
 func (level *Level) Resize(w, h int) {
 	ar := float64(w) / float64(h)
 	level.camera = engine.NewCamera(
-		engine.NewRect(-50, 0, 50, 100/ar),
+		engine.NewRect(-25, 0, 25, 50/ar),
 		engine.NewRect(0, 0, w, h),
 		engine.FlipYAxis)
 }

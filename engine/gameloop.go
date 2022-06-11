@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -58,12 +59,18 @@ type ebitenGame struct {
 // simulation and update the game state, likely breaking each ebiten
 // update into multiple physics ticks.
 func (game *ebitenGame) Update() error {
+	input := GetInputState()
+
+	if input.Q {
+		return errors.New("Quit")
+	}
+
 	now := time.Now()
 	dt := now.Sub(game.lastEbitenUpdate)
 	game.lastEbitenUpdate = now
 
 	us := &UpdateState{
-		Input:        GetInputState(),
+		Input:        input,
 		DeltaSeconds: tick,
 	}
 
@@ -109,7 +116,7 @@ func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 		log.Printf("layout %dx%d", outsideWidth, outsideHeight)
 		win.lastW = outsideWidth
 		win.lastH = outsideHeight
-		s := ebiten.DeviceScaleFactor()
+		s := 1.0 // ebiten.DeviceScaleFactor()
 		w, h := s*float64(outsideWidth), s*float64(outsideHeight)
 		if w/h > win.aspectRatio {
 			w = h * win.aspectRatio
