@@ -45,8 +45,13 @@ type Platform struct {
 }
 
 var Platforms = []Platform{
-	{engine.NewRect(100, 110, 250, 130), color.RGBA(190, 190, 255, 255)},
-	{engine.NewRect(300, 210, 500, 230), color.RGBA(190, 255, 190, 255)},
+	{engine.NewRect(100, 110, 250, 130), color.RGBA{190, 190, 255, 255}},
+	{engine.NewRect(300, 210, 500, 230), color.RGBA{190, 255, 190, 255}},
+}
+
+func (platform *Platform) Draw(ctx *engine.Graphics, cam *engine.Camera) {
+	ctx.SetColor(platform.color)
+	ctx.FillRect(cam, platform.bounds)
 }
 
 var TumbleLevels []float64
