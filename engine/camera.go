@@ -166,7 +166,7 @@ func (c *Camera) ToWorldRect(rect *Rect) *Rect {
 	return c.getInverseTransform().TransformRect(rect)
 }
 
-// Generic functions to transform arbitrary numeric types.
+// Generic funcs to transform arbitrary numeric types.
 
 // ScreenToWorld converts a point in display space to a point in world space.
 func ScreenToWorld[T Numeric](c *Camera, x, y T) (float64, float64) {

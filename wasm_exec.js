@@ -174,7 +174,7 @@
 					case "symbol":
 						typeFlag = 3;
 						break;
-					case "function":
+					case "func":
 						typeFlag = 4;
 						break;
 				}
@@ -209,8 +209,8 @@
 				go: {
 					// Go's SP does not change as long as no Go code is running. Some operations (e.g. calls, getters and setters)
 					// may synchronously trigger a Go event handler. This makes Go code get executed in the middle of the imported
-					// function. A goroutine can switch to a new stack if the current stack is too small (see morestack function).
-					// This changes the SP, thus we have to update the SP used by the imported function.
+					// func. A goroutine can switch to a new stack if the current stack is too small (see morestack func).
+					// This changes the SP, thus we have to update the SP used by the imported func.
 
 					// func wasmExit(code int32)
 					"runtime.wasmExit": (sp) => {
@@ -543,7 +543,7 @@
 
 		_makeFuncWrapper(id) {
 			const go = this;
-			return function () {
+			return func () {
 				const event = { id: id, this: this, args: arguments };
 				go._pendingEvent = event;
 				go._resume();

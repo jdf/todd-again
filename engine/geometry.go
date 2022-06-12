@@ -67,7 +67,7 @@ func (v *Vec2) String() string {
 }
 
 // Rect is an axis-aligned rectangle specified by its bottom left corner and top
-// right corner. Please use NewRect.* functions to create new Rects, as they
+// right corner. Please use NewRect.* funcs to create new Rects, as they
 // enforce ordering of the corners.
 type Rect struct {
 	Min, Max Vec2
