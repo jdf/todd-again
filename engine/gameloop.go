@@ -130,7 +130,7 @@ func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 		win.bufW, win.bufH = int(w), int(h)
 		img := image.NewRGBA(image.Rect(0, 0, win.bufW, win.bufH))
 		game.frameBuffer = img
-		game.gfx = &Graphics{Context: *gg.NewContextForRGBA(img)}
+		game.gfx = NewGraphics(gg.NewContextForRGBA(img))
 		game.userGame.Resize(win.bufW, win.bufH)
 		game.debugFace = truetype.NewFace(game.debugFont, &truetype.Options{
 			Size: 9,
