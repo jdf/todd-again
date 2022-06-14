@@ -8,3 +8,21 @@ import (
 type Numeric interface {
 	constraints.Float | constraints.Integer
 }
+
+type Stack[T any] []T
+
+func (t *Stack[T]) Push(v T) {
+	*t = append(*t, v)
+}
+
+func (t *Stack[T]) Pop() {
+	*t = (*t)[:len(*t)-1]
+}
+
+func (t *Stack[T]) Top() T {
+	return (*t)[len(*t)-1]
+}
+
+func (t *Stack[T]) Empty() bool {
+	return len(*t) == 0
+}

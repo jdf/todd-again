@@ -1,56 +1,10 @@
 package game
 
 import (
-	"fmt"
 	"image/color"
-	"math"
 
 	"github.com/jdf/todd-again/engine"
 )
-
-func nextTumbleHeight(height float64) float64 {
-	for _, h := range TumbleLevels {
-		if h < height {
-			return h
-		}
-	}
-	panic(fmt.Errorf("nowhere to tumble to from %v", height))
-}
-
-type TumbleAnimation struct {
-	sign         float64
-	startHeight  float64
-	startAngle   float64
-	targetHeight float64
-}
-
-type RotationDirection int
-
-const (
-	CounterClockwise = RotationDirection(1)
-	Clockwise        = RotationDirection(-1)
-)
-
-func NewTumbleAnimation(direction RotationDirection, startHeight float64) *TumbleAnimation {
-	return &TumbleAnimation{
-		sign:         float64(direction),
-		startHeight:  startHeight,
-		startAngle:   0,
-		targetHeight: nextTumbleHeight(startHeight),
-	}
-}
-
-func (t *TumbleAnimation) AngleFor(height float64) float64 {
-	if height >= t.startHeight {
-		return t.startAngle
-	}
-	if height <= t.targetHeight {
-		t.startHeight = t.targetHeight
-		t.targetHeight = nextTumbleHeight(t.startHeight)
-		t.startAngle += (math.Pi / 2.0) * float64(t.sign)
-	}
-	return t.startAngle + (height-t.startHeight)*t.sign
-}
 
 type Todd struct {
 	sideLength float64
@@ -81,62 +35,46 @@ type Todd struct {
 	eyeCenteringAnimation *Animation
 }
 
+func NewTodd(pos engine.Vec2, sideLength float64, fillColor color.Color) *Todd {
+	return &Todd{
+		pos:        pos,
+		sideLength: sideLength,
+		fillColor:  fillColor,
+	}
+}
+
+func (t *Todd) Gravity() float64 {
+	if t.vel.Y > 0 && JumpState == JumpStateJumping {
+		return Gravity * JumpStateGravityFactor
+	}
+	return Gravity
+}
+
+func (t *Todd) Update(s *engine.UpdateState) {
+
+}
+
+func (t *Todd) Blink() {
+	if t.blinkCumulativeTime == -1 {
+		t.blinkCumulativeTime = 0
+	}
+}
+
+func (t *Todd) Draw(g *engine.Graphics, cam *engine.Camera) {
+	g.SetColor(t.fillColor)
+
+	g.Push()
+	g.Translate(cam, t.pos)
+	g.Rotate(cam, t.bearing)
+
+	//s := t.sideLength
+	//half := s / 2.0
+	//xsquish := t.vSquish * 0.8
+	//ysquish := t.vSquish * 1.6
+}
+
 /*
-
-  // Maps an x-velocity to an integer in [0,2].
-  speedStepFunction(xVel) {
-    xVel = Math.abs(xVel);
-    if (xVel < Constants.maxvel * .333) {
-      return 0;
-    }
-    if (xVel < Constants.maxvel * .666) {
-      return 1;
-    }
-    return 2;
-  }
-
-  // The platform has a width differing from its apparent width, depending on
-  // your speed. The slower you are, the narrower the platform is.
-  platformMargin(xVel) {
-    return [8, 0, -5][this.speedStepFunction(xVel)];
-  }
-
-  getJumpImpulse(speed) {
-    return Constants.jumpImpulse * [1.0, 1.0, 1.2][this.speedStepFunction(
-        speed)];
-  }
-
-  getGravity() {
-    if (this.vel.y < 0) {
-      // going up!
-      return Constants.gravity * (World.controller.jump ? 0.55 : 1.0);
-    }
-    return Constants.gravity;
-  }
-
-  setPos(x, y) {
-    this.pos = {
-      x,
-      y
-    };
-  }
-
-  blink() {
-    if (this.blinkCumulativeTime !== -1) {
-      return;
-    }
-    this.blinkCumulativeTime = 0;
-  }
-
   drawAt(x, y) {
-    p.rectMode(p.CENTER);
-    p.fill(this.fillColor);
-    p.noStroke();
-
-    const s = this.sideLength;
-    const half = s / 2;
-    const xsquish = this.vSquish * 0.8;
-    const ysquish = this.vSquish * 1.6;
 
     p.push();
     p.translate(x, y);

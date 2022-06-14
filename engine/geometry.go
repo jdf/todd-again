@@ -57,6 +57,21 @@ func (v *Vec2) Div(d *Vec2) *Vec2 {
 	return &Vec2{v.X / d.X, v.Y / d.Y}
 }
 
+func (v *Vec2) Normalize() *Vec2 {
+	r := v.Copy()
+	r.NormSelf()
+	return r
+}
+
+func (v *Vec2) NormSelf() {
+	length := math.Hypot(v.X, v.Y)
+	v.X, v.Y = v.X/length, v.Y/length
+}
+
+func Dot(v1, v2 *Vec2) float64 {
+	return v1.X*v2.X + v1.Y*v2.Y
+}
+
 // Equals returns true if both vecs have the same coordinates.
 func (v *Vec2) Equals(other *Vec2) bool {
 	return v.X == other.X && v.Y == other.Y
@@ -151,6 +166,23 @@ func (r *Rect) Height() float64 {
 // Size returns the dimensions of this Rect.
 func (r *Rect) Size() *Vec2 {
 	return &Vec2{r.Max.X - r.Min.X, r.Max.Y - r.Min.Y}
+}
+
+func (r *Rect) Inset(delta *Vec2) *Rect {
+	return &Rect{
+		Min: r.Min.Plus(delta),
+		Max: r.Max.Minus(delta),
+	}
+}
+
+// Corners returns the four corners of this Rect from left-bottom counterclockwise.
+func (r *Rect) Corners() [4]Vec2 {
+	return [4]Vec2{
+		Vec2{r.Min.X, r.Min.Y},
+		Vec2{r.Min.X, r.Max.Y},
+		Vec2{r.Max.X, r.Max.Y},
+		Vec2{r.Max.X, r.Min.Y},
+	}
 }
 
 func (r *Rect) String() string {

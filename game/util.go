@@ -4,7 +4,7 @@ import (
 	"github.com/jdf/todd-again/engine"
 )
 
-func clamp(v, min, max) {
+func Clamp(v, min, max float64) float64 {
 	switch {
 	case v < min:
 		return min
