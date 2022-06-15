@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"log"
+
 	"golang.org/x/exp/constraints"
 )
 
@@ -13,10 +15,12 @@ type Stack[T any] []T
 
 func (t *Stack[T]) Push(v T) {
 	*t = append(*t, v)
+	log.Printf("after push stack: %v", t)
 }
 
 func (t *Stack[T]) Pop() {
 	*t = (*t)[:len(*t)-1]
+	log.Printf("after pop stack: %v", t)
 }
 
 func (t *Stack[T]) Top() T {

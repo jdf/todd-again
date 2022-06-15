@@ -216,18 +216,25 @@ func Scale(s *Vec2) *Affine {
 }
 
 // UniformScale creates a uniform scaling transform.
-func UniformScale(s float64) *Affine {
+func UniformScale[T Numeric](s T) *Affine {
 	return &Affine{
-		s, 0, 0,
-		0, s, 0,
+		float64(s), 0, 0,
+		0, float64(s), 0,
 	}
 }
 
 // Translation creates a translation transform.
-func Translation(t *Vec2) *Affine {
+func Translation[T Numeric](tx, ty T) *Affine {
 	return &Affine{
-		1, 0, t.X,
-		0, 1, t.Y,
+		1, 0, float64(tx),
+		0, 1, float64(ty),
+	}
+}
+
+func TranslationV(delta *Vec2) *Affine {
+	return &Affine{
+		1, 0, delta.X,
+		0, 1, delta.Y,
 	}
 }
 
@@ -243,7 +250,7 @@ func Rotation(angle float64) *Affine {
 
 // RotationAround returns a transform that rotates around the given point.
 func RotationAround(angle float64, p *Vec2) *Affine {
-	return Compose(Translation(&Vec2{-p.X, -p.Y}), Rotation(angle), Translation(&Vec2{p.X, p.Y}))
+	return Compose(Translation(-p.X, -p.Y), Rotation(angle), Translation(p.X, p.Y))
 }
 
 // Copy returns a copy of this affine transform.

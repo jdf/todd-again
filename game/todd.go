@@ -43,7 +43,7 @@ func (t *Todd) Gravity() float64 {
 }
 
 func (t *Todd) Update(s *engine.UpdateState) {
-
+	t.bearing += s.DeltaSeconds
 }
 
 func (t *Todd) Blink() {
@@ -55,9 +55,8 @@ func (t *Todd) Blink() {
 func (t *Todd) Draw(g *engine.Graphics) {
 	g.SetColor(t.fillColor)
 	g.Push()
+	g.RotateAround(t.bearing, engine.Vec(0, t.sideLength/2))
 	g.Translate(t.pos.X, t.pos.Y)
-	g.Rotate(t.bearing)
-	//g.DrawRoundedRect(engine.NewRect(10, 10, 20, 20), t.sideLength/8)
 	g.DrawRoundedRect(engine.NewRect(-t.sideLength/2, 0, t.sideLength/2, t.sideLength), t.sideLength/8)
 	g.Pop()
 	g.Fill()

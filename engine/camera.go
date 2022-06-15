@@ -87,9 +87,9 @@ func (c *Camera) ZoomInto(factor float64, center *Vec2) {
 	}
 	c.zoom = newZoom
 	zoomer := Compose(
-		Translation(center.Negate()),
+		TranslationV(center.Negate()),
 		UniformScale(factor),
-		Translation(center),
+		TranslationV(center),
 	)
 	c.worldRect = zoomer.TransformRect(c.worldRect)
 	c.invalidate()
@@ -109,15 +109,15 @@ func (c *Camera) SetScreenRect(viewport *Rect) {
 func (c *Camera) GetTransform() *Affine {
 	if c.worldToScreen == nil {
 		c.worldToScreen = Compose(
-			Translation(c.worldRect.Center().Negate()),
+			TranslationV(c.worldRect.Center().Negate()),
 			Scale(c.screenRect.Size().Div(c.worldRect.Size())),
-			Translation(c.screenRect.Center()),
+			TranslationV(c.screenRect.Center()),
 		)
 		if c.yAxisPolicy == FlipYAxis {
 			c.worldToScreen = Compose(
 				c.worldToScreen,
 				Scale(&Vec2{1, -1}),
-				Translation(&Vec2{0, c.screenRect.Height()}),
+				Translation(0, c.screenRect.Height()),
 			)
 		}
 	}

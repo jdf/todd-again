@@ -84,24 +84,24 @@ func (game *ebitenGame) Update() error {
 }
 
 func drawDebugInfo(game *ebitenGame) {
-	g := game.gfx
+	g := game.gfx.GetScreenContext()
 	g.SetFontFace(game.debugFace)
 	g.SetColor(color.RGBA{0, 0, 0, 200})
 	//g.FillRectScreen(NewRect(2, 2, 120, 24))
 
 	g.SetColor(color.RGBA{128, 128, 128, 255})
-	g.DrawTextScreen(
+	g.DrawString(
 		fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()),
 		4, 18)
 }
 
 // Draw draws the game screen in ebiten.
 func (game *ebitenGame) Draw(screen *ebiten.Image) {
-	g := game.gfx
+	g := game.gfx.GetScreenContext()
 
 	g.SetRGB(0, 0, 0)
 	g.Clear()
-	game.userGame.Draw(g)
+	game.userGame.Draw(game.gfx)
 
 	if debug {
 		drawDebugInfo(game)
