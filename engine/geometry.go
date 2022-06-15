@@ -53,6 +53,11 @@ func (v *Vec2) Negate() *Vec2 {
 }
 
 // Div component-wise divides this Vec2 by the given Vec2.
+func (v *Vec2) Mul(scalar float64) *Vec2 {
+	return &Vec2{v.X * scalar, v.Y * scalar}
+}
+
+// Div component-wise divides this Vec2 by the given Vec2.
 func (v *Vec2) Div(d *Vec2) *Vec2 {
 	return &Vec2{v.X / d.X, v.Y / d.Y}
 }

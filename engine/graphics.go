@@ -111,13 +111,16 @@ const (
 )
 
 func (g *Graphics) drawEllipticalArc(center, radii *Vec2, startAngle, endAngle float64, mode PathMode) {
-	const n = 4.0
-
+	angleDelta := math.Abs(math.Atan2(math.Sin(startAngle-endAngle), math.Cos(startAngle-endAngle)))
+	n := int(math.Round(4.0 * angleDelta / (.5 * math.Pi)))
+	if n == 0 {
+		n = 16
+	}
 	x, y := center.X, center.Y
 	rx, ry := radii.X, radii.Y
 	for i := 0; i < n; i++ {
-		p1 := float64(i+0) / n
-		p2 := float64(i+1) / n
+		p1 := float64(i+0) / float64(n)
+		p2 := float64(i+1) / float64(n)
 		a1 := startAngle + (endAngle-startAngle)*p1
 		a2 := startAngle + (endAngle-startAngle)*p2
 		x0 := x + rx*math.Cos(a1)
@@ -161,5 +164,10 @@ func (g *Graphics) DrawRoundedRect(r *Rect, radius float64) {
 		}
 		g.drawEllipticalArc(&arcCenters[i], radii, kCornerAngles[i], kCornerAngles[i+1], pathMode)
 	}
+	g.context.ClosePath()
+}
+
+func (g *Graphics) DrawEllipse(r *Rect) {
+	g.drawEllipticalArc(r.Center(), r.Size().Mul(.5), 0, 2*math.Pi, PathModeNewShape)
 	g.context.ClosePath()
 }

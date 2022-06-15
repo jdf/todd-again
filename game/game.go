@@ -19,7 +19,7 @@ func (level *Level) Draw(ctx *engine.Graphics) {
 func (level *Level) Resize(w, h int) {
 	//ar := float64(w) / float64(h)
 	level.camera = engine.NewCamera(
-		engine.NewRect(0, 0, float64(w)/10, float64(h)/10),
+		engine.NewRect(0, 0, float64(w)/2, float64(h)/2),
 		engine.NewRect(0, 0, w, h),
 		engine.FlipYAxis)
 }
@@ -31,7 +31,7 @@ func (level *Level) Update(s *engine.UpdateState) {
 func Level1() *Level {
 	level := &Level{
 		todd: &Todd{
-			sideLength: 10,
+			sideLength: 30,
 			fillColor:  color.RGBA{R: 233, G: 180, B: 30, A: 255},
 			pos:        engine.Vec2{X: 20, Y: 20},
 		},

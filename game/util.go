@@ -29,8 +29,8 @@ func Lerp(a, b, t float64) float64 {
  * @param w value at t=1
  * @param t [0, 1] parameter
  */
-func LerpVec(v, w engine.Vec2, t float64) engine.Vec2 {
-	return engine.Vec2{X: Lerp(v.X, w.X, t), Y: Lerp(v.Y, w.Y, t)}
+func LerpVec(v, w *engine.Vec2, t float64) *engine.Vec2 {
+	return &engine.Vec2{X: Lerp(v.X, w.X, t), Y: Lerp(v.Y, w.Y, t)}
 }
 
 type Animation interface {
