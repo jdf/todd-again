@@ -25,6 +25,7 @@ func (level *Level) Resize(w, h int) {
 }
 
 func (level *Level) Update(s *engine.UpdateState) {
+	level.todd.Update(s)
 }
 
 func Level1() *Level {
@@ -32,7 +33,7 @@ func Level1() *Level {
 		todd: &Todd{
 			sideLength: 10,
 			fillColor:  color.RGBA{R: 233, G: 180, B: 30, A: 255},
-			pos:        engine.Vec2{X: 5, Y: 0},
+			pos:        engine.Vec2{X: 20, Y: 20},
 		},
 	}
 	return level

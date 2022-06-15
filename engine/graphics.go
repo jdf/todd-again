@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"image/color"
 	"math"
 
 	"github.com/fogleman/gg"
@@ -9,7 +10,7 @@ import (
 // Graphics is a graphics context that knows how to manipulate
 // coordinates with a camera.
 type Graphics struct {
-	gg.Context
+	context gg.Context
 
 	worldToScreen *Affine
 
@@ -21,12 +22,43 @@ type Graphics struct {
 
 func NewGraphics(wrapped *gg.Context) *Graphics {
 	return &Graphics{
-		Context:              *wrapped,
+		context:              *wrapped,
 		objectToWorld:        *Identity(),
 		stack:                &Stack[Affine]{},
 		worldToScreen:        Identity(),
 		cachedObjectToScreen: nil,
 	}
+}
+
+func (g *Graphics) SetColor(color color.Color) {
+	g.context.SetColor(color)
+}
+
+func (g *Graphics) Fill() {
+	g.context.Fill()
+}
+
+func (g *Graphics) Stroke() {
+	g.context.Stroke()
+}
+
+func (g *Graphics) GetScreenContext() *gg.Context {
+	return &g.context
+}
+
+func (g *Graphics) Translate(x, y float64) {
+	g.objectToWorld.Append(Translation(x, y))
+	g.cachedObjectToScreen = nil
+}
+
+func (g *Graphics) Rotate(angle float64) {
+	g.objectToWorld.Append(Rotation(angle))
+	g.cachedObjectToScreen = nil
+}
+
+func (g *Graphics) RotateAround(angle float64, center *Vec2) {
+	g.objectToWorld.Append(RotationAround(angle, center))
+	g.cachedObjectToScreen = nil
 }
 
 func (g *Graphics) ObjectToScreen() *Affine {
@@ -42,7 +74,7 @@ func (g *Graphics) SetWorldToScreen(worldToScreen *Affine) {
 }
 
 func (g *Graphics) Push() {
-	g.stack.Push(g.objectToWorld)
+	g.stack.Push(*g.objectToWorld.Copy())
 }
 
 func (g *Graphics) Pop() {
@@ -53,22 +85,22 @@ func (g *Graphics) Pop() {
 
 // DrawTextScreen draws text at the given position in screen space.
 func (g *Graphics) DrawTextScreen(s string, x, y float64) {
-	g.DrawString(s, x, y)
+	g.context.DrawString(s, x, y)
 }
 
 // DrawLine draws a line from x1,y1 to x2,y2 in object space.
 func (g *Graphics) DrawLine(x1, y1, x2, y2 float64) {
-	g.MoveTo(g.ObjectToScreen().Transform(x1, y1))
-	g.LineTo(g.ObjectToScreen().Transform(x2, y2))
+	g.context.MoveTo(g.ObjectToScreen().Transform(x1, y1))
+	g.context.LineTo(g.ObjectToScreen().Transform(x2, y2))
 }
 
 func (g *Graphics) DrawRect(r *Rect) {
 	sr := g.ObjectToScreen().TransformRect(r)
-	g.MoveTo(sr.Min.X, sr.Min.Y)
-	g.LineTo(sr.Max.X, sr.Min.Y)
-	g.LineTo(sr.Max.X, sr.Max.Y)
-	g.LineTo(sr.Min.X, sr.Max.Y)
-	g.LineTo(sr.Min.X, sr.Min.Y)
+	g.context.MoveTo(sr.Min.X, sr.Min.Y)
+	g.context.LineTo(sr.Max.X, sr.Min.Y)
+	g.context.LineTo(sr.Max.X, sr.Max.Y)
+	g.context.LineTo(sr.Min.X, sr.Max.Y)
+	g.context.LineTo(sr.Min.X, sr.Min.Y)
 }
 
 type PathMode int
@@ -104,14 +136,14 @@ func (g *Graphics) drawEllipticalArc(center, radii *Vec2, startAngle, endAngle f
 		if i == 0 {
 			if mode == PathModeContinue {
 				//fmt.Printf("LineTo(%v, %v)\n", x0, y0)
-				g.LineTo(x0, y0)
+				g.context.LineTo(x0, y0)
 			} else {
 				//fmt.Printf("MoveTo(%v, %v)\n", x0, y0)
-				g.MoveTo(x0, y0)
+				g.context.MoveTo(x0, y0)
 			}
 		}
 		//fmt.Printf("QuadraticTo(%v, %v)\n", x2, y2)
-		g.QuadraticTo(cx, cy, x2, y2)
+		g.context.QuadraticTo(cx, cy, x2, y2)
 	}
 }
 
@@ -129,5 +161,5 @@ func (g *Graphics) DrawRoundedRect(r *Rect, radius float64) {
 		}
 		g.drawEllipticalArc(&arcCenters[i], radii, kCornerAngles[i], kCornerAngles[i+1], pathMode)
 	}
-	g.ClosePath()
+	g.context.ClosePath()
 }
