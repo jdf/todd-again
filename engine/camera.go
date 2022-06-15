@@ -19,8 +19,8 @@ type Camera struct {
 	yAxisPolicy YAxisPolicy
 
 	// Cached transforms from world to display space and back.
-	worldToDisplay *Affine
-	displayToWorld *Affine
+	worldToScreen *Affine
+	screenToWorld *Affine
 
 	// hack to limit zoom
 	zoom float64
@@ -96,8 +96,8 @@ func (c *Camera) ZoomInto(factor float64, center *Vec2) {
 }
 
 func (c *Camera) invalidate() {
-	c.worldToDisplay = nil
-	c.displayToWorld = nil
+	c.worldToScreen = nil
+	c.screenToWorld = nil
 }
 
 // SetScreenRect sets the screen rectangle.
@@ -106,29 +106,29 @@ func (c *Camera) SetScreenRect(viewport *Rect) {
 	c.invalidate()
 }
 
-func (c *Camera) getTransform() *Affine {
-	if c.worldToDisplay == nil {
-		c.worldToDisplay = Compose(
+func (c *Camera) GetTransform() *Affine {
+	if c.worldToScreen == nil {
+		c.worldToScreen = Compose(
 			Translation(c.worldRect.Center().Negate()),
 			Scale(c.screenRect.Size().Div(c.worldRect.Size())),
 			Translation(c.screenRect.Center()),
 		)
 		if c.yAxisPolicy == FlipYAxis {
-			c.worldToDisplay = Compose(
-				c.worldToDisplay,
+			c.worldToScreen = Compose(
+				c.worldToScreen,
 				Scale(&Vec2{1, -1}),
 				Translation(&Vec2{0, c.screenRect.Height()}),
 			)
 		}
 	}
-	return c.worldToDisplay
+	return c.worldToScreen
 }
 
 func (c *Camera) getInverseTransform() *Affine {
-	if c.displayToWorld == nil {
-		c.displayToWorld = c.getTransform().Inverse()
+	if c.screenToWorld == nil {
+		c.screenToWorld = c.GetTransform().Inverse()
 	}
-	return c.displayToWorld
+	return c.screenToWorld
 }
 
 // CanSee returns true if the given rectangle is visible in the camera's world window.
@@ -138,17 +138,17 @@ func (c *Camera) CanSee(rect *Rect) bool {
 
 // ToScreenVec2 converts a point in world space to a point in display space.
 func (c *Camera) ToScreenVec2(worldPos *Vec2) *Vec2 {
-	return c.getTransform().TransformVec2(worldPos)
+	return c.GetTransform().TransformVec2(worldPos)
 }
 
 // ToScreen converts a point in world space to a point in display space.
 func (c *Camera) ToScreen(x, y float64) (float64, float64) {
-	return c.getTransform().Transform(x, y)
+	return c.GetTransform().Transform(x, y)
 }
 
 // ToScreenRect converts a rectangle in world space to a rectangle in display space.
 func (c *Camera) ToScreenRect(rect *Rect) *Rect {
-	return c.getTransform().TransformRect(rect)
+	return c.GetTransform().TransformRect(rect)
 }
 
 // ToWorldVec2 converts a point in display space to a point in world space.

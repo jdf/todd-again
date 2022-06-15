@@ -35,14 +35,6 @@ type Todd struct {
 	eyeCenteringAnimation *Animation
 }
 
-func NewTodd(pos engine.Vec2, sideLength float64, fillColor color.Color) *Todd {
-	return &Todd{
-		pos:        pos,
-		sideLength: sideLength,
-		fillColor:  fillColor,
-	}
-}
-
 func (t *Todd) Gravity() float64 {
 	if t.vel.Y > 0 && JumpState == JumpStateJumping {
 		return Gravity * JumpStateGravityFactor
@@ -60,12 +52,15 @@ func (t *Todd) Blink() {
 	}
 }
 
-func (t *Todd) Draw(g *engine.Graphics, cam *engine.Camera) {
+func (t *Todd) Draw(g *engine.Graphics) {
 	g.SetColor(t.fillColor)
-
 	g.Push()
-	g.Translate(cam, t.pos)
-	g.Rotate(cam, t.bearing)
+	g.Translate(t.pos.X, t.pos.Y)
+	g.Rotate(t.bearing)
+	//g.DrawRoundedRect(engine.NewRect(10, 10, 20, 20), t.sideLength/8)
+	g.DrawRoundedRect(engine.NewRect(-t.sideLength/2, 0, t.sideLength/2, t.sideLength), t.sideLength/8)
+	g.Pop()
+	g.Fill()
 
 	//s := t.sideLength
 	//half := s / 2.0
