@@ -170,8 +170,8 @@ func (r *Rect) Size() *Vec2 {
 
 func (r *Rect) Inset(delta *Vec2) *Rect {
 	return &Rect{
-		Min: r.Min.Plus(delta),
-		Max: r.Max.Minus(delta),
+		Min: *r.Min.Plus(delta),
+		Max: *r.Max.Minus(delta),
 	}
 }
 

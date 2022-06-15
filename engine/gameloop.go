@@ -87,7 +87,7 @@ func drawDebugInfo(game *ebitenGame) {
 	g := game.gfx
 	g.SetFontFace(game.debugFace)
 	g.SetColor(color.RGBA{0, 0, 0, 200})
-	g.FillRectScreen(NewRect(2, 2, 120, 24))
+	//g.FillRectScreen(NewRect(2, 2, 120, 24))
 
 	g.SetColor(color.RGBA{128, 128, 128, 255})
 	g.DrawTextScreen(

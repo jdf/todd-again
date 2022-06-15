@@ -31,7 +31,7 @@ func NewGraphics(wrapped *gg.Context) *Graphics {
 
 func (g *Graphics) ObjectToScreen() *Affine {
 	if g.cachedObjectToScreen == nil {
-		composeInto(&g.objectToWorld, g.worldToScreen, g.cachedObjectToScreen)
+		g.cachedObjectToScreen = Compose(&g.objectToWorld, g.worldToScreen)
 	}
 	return g.cachedObjectToScreen
 }
@@ -79,7 +79,7 @@ const (
 )
 
 func (g *Graphics) drawEllipticalArc(center, radii *Vec2, startAngle, endAngle float64, mode PathMode) {
-	const n = 16
+	const n = 4.0
 
 	x, y := center.X, center.Y
 	rx, ry := radii.X, radii.Y
@@ -103,16 +103,19 @@ func (g *Graphics) drawEllipticalArc(center, radii *Vec2, startAngle, endAngle f
 
 		if i == 0 {
 			if mode == PathModeContinue {
+				//fmt.Printf("LineTo(%v, %v)\n", x0, y0)
 				g.LineTo(x0, y0)
 			} else {
+				//fmt.Printf("MoveTo(%v, %v)\n", x0, y0)
 				g.MoveTo(x0, y0)
 			}
 		}
+		//fmt.Printf("QuadraticTo(%v, %v)\n", x2, y2)
 		g.QuadraticTo(cx, cy, x2, y2)
 	}
 }
 
-var kCornerAngles = []float64{-math.Pi, -.5 * math.Pi, 0, .5 * math.Pi, math.Pi}
+var kCornerAngles = []float64{1.5 * math.Pi, math.Pi, .5 * math.Pi, 0, -.5 * math.Pi}
 
 func (g *Graphics) DrawRoundedRect(r *Rect, radius float64) {
 	maxRadius := math.Min(.5*r.Width(), .5*r.Height())

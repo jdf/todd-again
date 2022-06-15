@@ -11,7 +11,8 @@ type Platform struct {
 	color  color.Color
 }
 
-func (platform *Platform) Draw(ctx *engine.Graphics, cam *engine.Camera) {
-	ctx.SetColor(platform.color)
-	ctx.FillRect(cam, platform.bounds)
+func (platform *Platform) Draw(g *engine.Graphics) {
+	g.SetColor(platform.color)
+	g.DrawRoundedRect(platform.bounds, 5)
+	g.Fill()
 }
