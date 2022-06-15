@@ -3,11 +3,14 @@ package game
 import (
 	"image/color"
 	"math"
+	"math/rand"
 
 	"github.com/jdf/todd-again/engine"
 )
 
 const debugTodd = true
+
+var debugColor = color.RGBA{0, 255, 0, 255}
 
 type Todd struct {
 	sideLength float64
@@ -47,7 +50,17 @@ func (t *Todd) Gravity() float64 {
 }
 
 func (t *Todd) Update(s *engine.UpdateState) {
-	t.bearing += s.DeltaSeconds
+
+	if t.blinkCumulativeTime != -1 {
+		t.blinkCumulativeTime += s.DeltaSeconds
+		if t.blinkCumulativeTime >= BlinkCycleSeconds {
+			t.blinkCumulativeTime = -1
+		}
+	}
+
+	if rand.Float32() < 0.001 {
+		t.Blink()
+	}
 }
 
 func (t *Todd) Blink() {
@@ -76,7 +89,7 @@ func (t *Todd) Draw(g *engine.Graphics) {
 	g.Fill()
 
 	if debugTodd {
-		g.SetColor(color.RGBA{0, 255, 0, 255})
+		g.SetColor(debugColor)
 		g.DrawLine(-.5, -.5, .5, .5)
 		g.Stroke()
 		g.DrawLine(-.5, .5, .5, -.5)
@@ -102,39 +115,19 @@ func (t *Todd) Draw(g *engine.Graphics) {
 	g.SetColor(color.Black)
 	g.Fill()
 
+	if t.blinkCumulativeTime != -1 {
+		blinkCycle := t.blinkCumulativeTime / BlinkCycleSeconds
+		g.SetColor(t.fillColor)
+		lidTop := eyePos.Y + 6
+		lidBottom := lidTop - 12*math.Sin(math.Pi*blinkCycle)
+		g.DrawRect(engine.NewRect(-half+3, lidBottom, half-3, lidTop))
+		g.Fill()
+	}
+
 	g.Pop()
 }
 
 /*
-  drawAt(x, y) {
-
-
-
-    p.rectMode(p.CORNERS);
-    if (this.blinkCumulativeTime !== -1) {
-      const blinkCycle = this.blinkCumulativeTime / Constants.blinkCycleSeconds;
-      p.fill(this.fillColor);
-      const lidTopY = eyePos.y - 6;
-      const lidBottomY = lidTopY + 12 * Math.sin(Math.PI * blinkCycle);
-      p.rect(-half + 3, lidTopY, half - 3, lidBottomY);
-    }
-    p.pop();
-  }
-
-  draw() {
-    const {
-      x,
-      y
-    } = this.pos;
-    this.drawAt(x, y);
-    const half = this.sideLength / 2;
-    if (x < half) {
-      this.drawAt(width + x, y);
-    } else if (x > width - half) {
-      this.drawAt(x - width, y);
-    }
-  }
-
   xAccel(a) {
     this.vel.x = clamp(this.vel.x + a, -Constants.maxvel, Constants.maxvel);
   }
@@ -207,12 +200,6 @@ func (t *Todd) Draw(g *engine.Graphics) {
       }
     }
 
-    if (this.blinkCumulativeTime !== -1) {
-      this.blinkCumulativeTime += dt;
-    }
-    if (this.blinkCumulativeTime >= Constants.blinkCycleSeconds) {
-      this.blinkCumulativeTime = -1;
-    }
 
     this.pos.x += this.vel.x * dt;
     if (this.pos.x > width) {
