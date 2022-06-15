@@ -53,31 +53,33 @@ func (t *Todd) Blink() {
 }
 
 func (t *Todd) Draw(g *engine.Graphics) {
+	x, y := t.pos.X, t.pos.Y
+	s := t.sideLength
+	half := s / 2.0
+
 	g.SetColor(t.fillColor)
 	g.Push()
-	g.RotateAround(t.bearing, engine.Vec(0, t.sideLength/2))
+	g.RotateAround(t.bearing, engine.Vec(0, half))
 	g.Translate(t.pos.X, t.pos.Y)
-	g.DrawRoundedRect(engine.NewRect(-t.sideLength/2, 0, t.sideLength/2, t.sideLength), t.sideLength/8)
+	g.DrawRoundedRect(engine.NewRect(-half, 0, half, half), half/8)
 	g.Pop()
 	g.Fill()
 
-	//s := t.sideLength
-	//half := s / 2.0
-	//xsquish := t.vSquish * 0.8
-	//ysquish := t.vSquish * 1.6
+	xsquish := t.vSquish * 0.8
+	ysquish := t.vSquish * 1.6
+
+	g.Push()
+	g.Translate(x, y)
+	if t.tumbleAnimation != nil {
+		g.RotateAround(t.tumbleAnimation.AngleFor(y), engine.Vec(0, half))
+	}
+	g.DrawRoundedRect(engine.NewRect())
+	p.rect(0, -(half + ysquish/2.0), s-xsquish, s+ysquish, 3, 3)
 }
 
 /*
   drawAt(x, y) {
 
-    p.push();
-    p.translate(x, y);
-    if (this.tumbleAnimation != null) {
-      p.translate(0, -half);
-      p.rotate(this.tumbleAnimation.angleFor(this.pos.y));
-      p.translate(0, half);
-    }
-    p.rect(0, -(half + ysquish / 2.0), s - xsquish, s + ysquish, 3, 3);
 
     const eyeVCenter = -s + 8 - this.vSquish;
     const eyeOffset = p.lerp(0, half - 6,
