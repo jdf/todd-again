@@ -2,15 +2,19 @@ package game
 
 import (
 	"image/color"
+	"math"
 
 	"github.com/jdf/todd-again/engine"
 )
 
+const debugTodd = true
+
 type Todd struct {
 	sideLength float64
 	fillColor  color.Color
-	pos        engine.Vec2
-	vel        engine.Vec2
+	// Todd's bottom-center.
+	pos engine.Vec2
+	vel engine.Vec2
 
 	// The direction the eye is facing.
 	bearing float64
@@ -57,14 +61,6 @@ func (t *Todd) Draw(g *engine.Graphics) {
 	s := t.sideLength
 	half := s / 2.0
 
-	g.SetColor(t.fillColor)
-	g.Push()
-	g.RotateAround(t.bearing, engine.Vec(0, half))
-	g.Translate(t.pos.X, t.pos.Y)
-	g.DrawRoundedRect(engine.NewRect(-half, 0, half, half), half/8)
-	g.Pop()
-	g.Fill()
-
 	xsquish := t.vSquish * 0.8
 	ysquish := t.vSquish * 1.6
 
@@ -73,30 +69,46 @@ func (t *Todd) Draw(g *engine.Graphics) {
 	if t.tumbleAnimation != nil {
 		g.RotateAround(t.tumbleAnimation.AngleFor(y), engine.Vec(0, half))
 	}
-	g.DrawRoundedRect(engine.NewRect())
-	p.rect(0, -(half + ysquish/2.0), s-xsquish, s+ysquish, 3, 3)
+	width := s - xsquish
+	height := s + ysquish
+	g.DrawRoundedRect(engine.NewRect(-width/2, 0, width/2, height), s/8)
+	g.SetColor(t.fillColor)
+	g.Fill()
+
+	if debugTodd {
+		g.SetColor(color.RGBA{0, 255, 0, 255})
+		g.DrawLine(-.5, -.5, .5, .5)
+		g.Stroke()
+		g.DrawLine(-.5, .5, .5, -.5)
+		g.Stroke()
+	}
+
+	speedRatio := math.Abs(t.bearing / Maxvel)
+	eyeVCenter := half - t.vSquish
+	eyeOffset := Lerp(0, half-6, speedRatio)
+	pupilOffset := Lerp(0, half-3, speedRatio)
+
+	eyePos := &engine.Vec2{X: math.Copysign(eyeOffset, t.bearing), Y: eyeVCenter}
+	pupilPos := &engine.Vec2{X: math.Copysign(pupilOffset, t.bearing), Y: eyeVCenter}
+	if t.eyeCentering != 0 {
+		center := &engine.Vec2{X: 0, Y: half}
+		eyePos = LerpVec(eyePos, center, t.eyeCentering)
+		pupilPos = LerpVec(pupilPos, center, t.eyeCentering)
+	}
+	g.DrawEllipse(engine.NewRect(eyePos.X-5, eyePos.Y-5, eyePos.X+5, eyePos.Y+5))
+	g.SetColor(color.White)
+	g.Fill()
+	g.DrawEllipse(engine.NewRect(pupilPos.X-1.5, pupilPos.Y-1.5, pupilPos.X+1.5, pupilPos.Y+1.5))
+	g.SetColor(color.Black)
+	g.Fill()
+
+	g.Pop()
 }
 
 /*
   drawAt(x, y) {
 
 
-    const eyeVCenter = -s + 8 - this.vSquish;
-    const eyeOffset = p.lerp(0, half - 6,
-        Math.abs(this.bearing / Constants.maxvel));
-    const pupilOffset = p.lerp(0, half - 3,
-        Math.abs(this.bearing / Constants.maxvel));
-    let eyePos = {x: eyeOffset * Math.sign(this.bearing), y: eyeVCenter};
-    let pupilPos = {x: pupilOffset * Math.sign(this.bearing), y: eyeVCenter};
-    if (this.eyeCentering !== 0) {
-      const center = {x: 0, y: -half};
-      eyePos = lerpVec(eyePos, center, this.eyeCentering);
-      pupilPos = lerpVec(pupilPos, center, this.eyeCentering);
-    }
-    p.fill(255, 255, 255);
-    p.ellipse(eyePos.x, eyePos.y, 10, 10);
-    p.fill(0);
-    p.ellipse(pupilPos.x, pupilPos.y, 3, 3);
 
     p.rectMode(p.CORNERS);
     if (this.blinkCumulativeTime !== -1) {
