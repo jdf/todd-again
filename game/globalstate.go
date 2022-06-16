@@ -71,4 +71,4 @@ func SetControllerState(input *engine.InputState) {
 	World.Controller = engineControllerWrapper{input}
 }
 
-var WorldBounds = engine.NewRect(-100, 0, 100, 50)
+var WorldBounds = engine.NewRect(-1000, 0, 1000, 200)
