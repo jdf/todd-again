@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 	"math/rand"
@@ -42,6 +43,10 @@ type Todd struct {
 	eyeCenteringAnimation Animation
 }
 
+func (t *Todd) String() string {
+	return fmt.Sprintf("Todd pos %v vel %v)", t.pos, t.vel)
+}
+
 func (t *Todd) Gravity() float64 {
 	if t.vel.Y > 0 && World.JumpState == JumpStateJumping {
 		return Gravity * JumpStateGravityFactor
@@ -51,6 +56,24 @@ func (t *Todd) Gravity() float64 {
 
 func (t *Todd) Update(s *engine.UpdateState) {
 	dt := s.DeltaSeconds
+
+	accel := Accel
+	if !t.IsInContactWithGround() {
+		accel = AirBending
+	}
+
+	if World.Controller.Left() {
+		t.AdjustBearing(-BearingAccel * dt)
+		t.AccelX(-accel * dt)
+	} else if World.Controller.Right() {
+		t.AdjustBearing(BearingAccel * dt)
+		t.AccelX(accel * dt)
+	} else {
+		t.ApplyBearingFriction()
+		if t.IsInContactWithGround() {
+			t.ApplyFriction()
+		}
+	}
 
 	if t.blinkCumulativeTime != -1 {
 		t.blinkCumulativeTime += dt
@@ -74,11 +97,13 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		}
 	}
 
-	t.pos.X += t.vel.X * dt
-	if t.Right() > WorldBounds.Right() {
-		t.pos.X = WorldBounds.Right() - t.sideLength/2
-	} else if t.Left() < WorldBounds.Left() {
-		t.pos.X = t.sideLength / 2
+	if math.Abs(t.vel.X) > 0 {
+		t.pos.X += t.vel.X * dt
+		if t.Right() > WorldBounds.Right() {
+			t.pos.X = WorldBounds.Right() - t.sideLength/2
+		} else if t.Left() < WorldBounds.Left() {
+			t.pos.X = t.sideLength / 2
+		}
 	}
 
 	// Collisions.
@@ -112,7 +137,7 @@ func (t *Todd) Update(s *engine.UpdateState) {
 			if oldvel > TerminalVelocity*0.95 {
 				t.Blink()
 			}
-			t.vSquishVel = -oldvel / 5.0
+			t.vSquishVel = oldvel / 5.0
 			if wantJump {
 				World.JumpState = JumpStateLanded
 			} else {
@@ -140,13 +165,12 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		t.vSquish = 0
 	} else {
 		// squish stiffness
-		const k = 200.0
+		const k = 100.0
 		const damping = 8.5
 
 		squishForce := -k * t.vSquish
 		dampingForce := damping * t.vSquishVel
-		t.vSquishVel +=
-			(squishForce - dampingForce) * dt
+		t.vSquishVel += (squishForce - dampingForce) * dt
 		t.vSquishVel = Clamp(
 			t.vSquishVel, -MaxSquishVel, MaxSquishVel)
 		t.vSquish += t.vSquishVel * dt
@@ -158,7 +182,6 @@ func (t *Todd) Update(s *engine.UpdateState) {
 			t.eyeCenteringAnimation = nil
 		}
 	}
-
 }
 
 func (t *Todd) Blink() {
@@ -195,7 +218,7 @@ func (t *Todd) Draw(g *engine.Graphics) {
 	}
 
 	speedRatio := math.Abs(t.bearing / Maxvel)
-	eyeVCenter := half - t.vSquish
+	eyeVCenter := half + 4 + t.vSquish
 	eyeOffset := Lerp(0, half-6, speedRatio)
 	pupilOffset := Lerp(0, half-3, speedRatio)
 
@@ -235,7 +258,7 @@ func (t *Todd) AccelY(a float64) {
 	if World.Controller.Jump() {
 		maxVel = JumpTerminalVelocity
 	}
-	if t.vel.Y > maxVel {
+	if t.vel.Y < maxVel {
 		t.vel.Y = maxVel
 	}
 }
@@ -253,6 +276,9 @@ func (t *Todd) Jump() {
 
 func (t *Todd) ApplyFriction() {
 	t.vel.X *= Friction
+	if math.Abs(t.vel.X) < .01 {
+		t.vel.X = 0
+	}
 }
 
 func (t *Todd) ApplyBearingFriction() {
@@ -291,110 +317,3 @@ func (t *Todd) GetContactHeight() float64 {
 	}
 	return -1
 }
-
-/*
-
-
-
- func (t* Todd)  move(dt) {
-    t.YAccel(t.getGravity() * dt);
-    if (t.isInContactWithGround()) {
-      if (World.controller.jump && World.isJumpIdle()) {
-        t.jump();
-      } else if (!World.controller.jump && World.isJumpLanded()) {
-        World.setJumpState(World.JumpState.idle);
-      }
-    }
-
-
-    t.pos.X += t.vel.X * dt;
-    if (t.pos.X > width) {
-      t.pos.X = 0;
-    } else if (t.pos.X < 0) {
-      t.pos.X = width;
-    }
-
-    // Collisions.
-    const currentY = t.pos.Y;
-    t.pos.Y = currentY + t.vel.Y * dt;
-    let colliding = false;
-    if (t.pos.Y >= height) {
-      colliding = true;
-      t.pos.Y = height;
-    } else {
-      const margin = t.platformMargin(t.vel.X);
-      for (const plat of World.platforms) {
-        if (currentY <= plat.top && t.pos.Y >= plat.top &&
-            t.right() >= plat.left + margin &&
-            t.left() <= plat.right - margin) {
-          colliding = true;
-          t.pos.Y = plat.top;
-          break;
-        }
-      }
-    }
-    const oldvel = t.vel.Y;
-    if (colliding) {
-      t.vel.Y = 0;
-      t.tumbleAnimation = null;
-    }
-    if (World.isJumpJumping()) {
-      if (colliding) {
-        t.eyeCenteringAnimation = new TimeBasedAnimation(t.eyeCentering,
-            0, Constants.eyeCenteringDurationSeconds);
-        // blink on hard landing
-        if (oldvel > Constants.terminalVelocity * 0.95) {
-          t.blink();
-        }
-        t.vSquishVel = -oldvel / 5.0;
-        World.setJumpState(
-            World.controller.jump ? World.JumpState.landed
-                : World.JumpState.idle);
-      }
-    } else if (!colliding) {
-      World.setJumpState(World.JumpState.jumping);  // we fell off a platform
-      // Squish, but, if already squishing, squish in that direction.
-      if (MaxSquishVel > Math.abs(t.vSquishVel)) {
-        t.vSquishVel = MaxSquishVel * Math.sign(t.vSquishVel);
-      }
-      let sign = Math.sign(t.vel.X);
-      if (World.controller.left) {
-        sign = -1;
-      } else if (World.controller.right) {
-        sign = 1;
-      }
-      t.tumbleAnimation = new TumbleAnimation(sign, t.pos.Y);
-      t.eyeCenteringAnimation = new TimeBasedAnimation(t.eyeCentering,
-          1, Constants.eyeCenteringDurationSeconds);
-    }
-
-    if (Math.abs(t.vSquishVel + t.vSquish) < 0.2) {
-      // Squish damping when the energy is below threshold.
-      t.vSquishVel = t.vSquish = 0;
-    } else {
-      // squish stiffness
-      const k = 200.0;
-      const damping = 8.5;
-
-      const squishForce = -k * t.vSquish;
-      const dampingForce = damping * t.vSquishVel;
-      t.vSquishVel +=
-          (squishForce - dampingForce) * dt;
-      t.vSquishVel = clamp(
-          t.vSquishVel, -MaxSquishVel, MaxSquishVel);
-      t.vSquish += t.vSquishVel * dt;
-    }
-
-    if (t.eyeCenteringAnimation != null) {
-      t.eyeCentering = t.eyeCenteringAnimation.value();
-      if (t.eyeCenteringAnimation.isDone()) {
-        t.eyeCenteringAnimation = null;
-      }
-    }
-  }
-
-  isInContactWithGround() {
-    return t.getContactHeight() !== -1;
-  }
-}
-*/
