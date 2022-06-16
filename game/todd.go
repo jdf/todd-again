@@ -127,120 +127,123 @@ func (t *Todd) Draw(g *engine.Graphics) {
 	g.Pop()
 }
 
+func (t *Todd) AccelX(a float64) {
+	t.vel.X = Clamp(t.vel.X+a, -Maxvel, Maxvel)
+}
+
+func (t *Todd) AccelY(a float64) {
+	t.vel.Y = t.vel.Y + a
+	maxVel := TerminalVelocity
+	if ToddController.Jump() {
+		maxVel = JumpTerminalVelocity
+	}
+	if t.vel.Y > maxVel {
+		t.vel.Y = maxVel
+	}
+}
+
+func (t *Todd) AdjustBearing(a float64) {
+	t.bearing = Clamp(t.bearing+a, -Maxvel, Maxvel)
+}
+
+func (t *Todd) Jump() {
+	JumpState = JumpStateJumping
+	World.setJumpState(World.JumpState.jumping)
+	t.initialJumpSpeed = Math.abs(t.vel.x)
+	t.vel.y = t.getJumpImpulse(t.initialJumpSpeed)
+	t.vSquishVel = MaxSquishVel
+}
+
 /*
-  xAccel(a) {
-    this.vel.x = clamp(this.vel.x + a, -Constants.maxvel, Constants.maxvel);
+
+  func (t* Todd) applyFriction() {
+    t.vel.x *= Constants.friction;
   }
 
-  adjustBearing(a) {
-    this.bearing =
-        clamp(this.bearing + a, -Constants.maxvel, Constants.maxvel);
+ func (t* Todd)  applyBearingFriction() {
+    t.bearing *= Constants.bearingFriction;
   }
 
-  yAccel(a) {
-    this.vel.y = this.vel.y + a;
-    const term = World.controller.jump ? Constants.jumpTerminalVelocity
-        : Constants.terminalVelocity;
-    if (this.vel.y > term) {
-      this.vel.y = term;
-    }
+  func (t* Todd) left() {
+    return t.pos.x - t.sideLength / 2;
   }
 
-  jump() {
-    World.setJumpState(World.JumpState.jumping);
-    this.initialJumpSpeed = Math.abs(this.vel.x);
-    this.vel.y = this.getJumpImpulse(this.initialJumpSpeed);
-    this.vSquishVel = Constants.maxSquishVel;
-  }
-
-  applyFriction() {
-    this.vel.x *= Constants.friction;
-  }
-
-  applyBearingFriction() {
-    this.bearing *= Constants.bearingFriction;
-  }
-
-  left() {
-    return this.pos.x - this.sideLength / 2;
-  }
-
-  right() {
-    return this.pos.x + this.sideLength / 2;
+  func (t* Todd) right() {
+    return t.pos.x + t.sideLength / 2;
   }
 
   // Y value of surface top or -1 for not landing.
-  getContactHeight() {
-    if (this.pos.y >= height) {
+ func (t* Todd)  getContactHeight() {
+    if (t.pos.y >= height) {
       return height;
     }
     // can't land if we're moving up
-    if (this.vel.y < 0) {
+    if (t.vel.y < 0) {
       return -1;
     }
-    const margin = this.platformMargin(this.vel.x);
+    const margin = t.platformMargin(t.vel.x);
     for (const plat of World.platforms) {
-      if (this.pos.y >= plat.top &&
-          this.pos.y <= plat.bottom &&
-          this.right() >= plat.left + margin &&
-          this.left() <= plat.right - margin) {
+      if (t.pos.y >= plat.top &&
+          t.pos.y <= plat.bottom &&
+          t.right() >= plat.left + margin &&
+          t.left() <= plat.right - margin) {
         return plat.top;
       }
     }
     return -1;
   }
 
-  move(dt) {
-    this.yAccel(this.getGravity() * dt);
-    if (this.isInContactWithGround()) {
+ func (t* Todd)  move(dt) {
+    t.yAccel(t.getGravity() * dt);
+    if (t.isInContactWithGround()) {
       if (World.controller.jump && World.isJumpIdle()) {
-        this.jump();
+        t.jump();
       } else if (!World.controller.jump && World.isJumpLanded()) {
         World.setJumpState(World.JumpState.idle);
       }
     }
 
 
-    this.pos.x += this.vel.x * dt;
-    if (this.pos.x > width) {
-      this.pos.x = 0;
-    } else if (this.pos.x < 0) {
-      this.pos.x = width;
+    t.pos.x += t.vel.x * dt;
+    if (t.pos.x > width) {
+      t.pos.x = 0;
+    } else if (t.pos.x < 0) {
+      t.pos.x = width;
     }
 
     // Collisions.
-    const currentY = this.pos.y;
-    this.pos.y = currentY + this.vel.y * dt;
+    const currentY = t.pos.y;
+    t.pos.y = currentY + t.vel.y * dt;
     let colliding = false;
-    if (this.pos.y >= height) {
+    if (t.pos.y >= height) {
       colliding = true;
-      this.pos.y = height;
+      t.pos.y = height;
     } else {
-      const margin = this.platformMargin(this.vel.x);
+      const margin = t.platformMargin(t.vel.x);
       for (const plat of World.platforms) {
-        if (currentY <= plat.top && this.pos.y >= plat.top &&
-            this.right() >= plat.left + margin &&
-            this.left() <= plat.right - margin) {
+        if (currentY <= plat.top && t.pos.y >= plat.top &&
+            t.right() >= plat.left + margin &&
+            t.left() <= plat.right - margin) {
           colliding = true;
-          this.pos.y = plat.top;
+          t.pos.y = plat.top;
           break;
         }
       }
     }
-    const oldvel = this.vel.y;
+    const oldvel = t.vel.y;
     if (colliding) {
-      this.vel.y = 0;
-      this.tumbleAnimation = null;
+      t.vel.y = 0;
+      t.tumbleAnimation = null;
     }
     if (World.isJumpJumping()) {
       if (colliding) {
-        this.eyeCenteringAnimation = new TimeBasedAnimation(this.eyeCentering,
+        t.eyeCenteringAnimation = new TimeBasedAnimation(t.eyeCentering,
             0, Constants.eyeCenteringDurationSeconds);
         // blink on hard landing
         if (oldvel > Constants.terminalVelocity * 0.95) {
-          this.blink();
+          t.blink();
         }
-        this.vSquishVel = -oldvel / 5.0;
+        t.vSquishVel = -oldvel / 5.0;
         World.setJumpState(
             World.controller.jump ? World.JumpState.landed
                 : World.JumpState.idle);
@@ -248,47 +251,47 @@ func (t *Todd) Draw(g *engine.Graphics) {
     } else if (!colliding) {
       World.setJumpState(World.JumpState.jumping);  // we fell off a platform
       // Squish, but, if already squishing, squish in that direction.
-      if (Constants.maxSquishVel > Math.abs(this.vSquishVel)) {
-        this.vSquishVel = Constants.maxSquishVel * Math.sign(this.vSquishVel);
+      if (MaxSquishVel > Math.abs(t.vSquishVel)) {
+        t.vSquishVel = MaxSquishVel * Math.sign(t.vSquishVel);
       }
-      let sign = Math.sign(this.vel.x);
+      let sign = Math.sign(t.vel.x);
       if (World.controller.left) {
         sign = -1;
       } else if (World.controller.right) {
         sign = 1;
       }
-      this.tumbleAnimation = new TumbleAnimation(sign, this.pos.y);
-      this.eyeCenteringAnimation = new TimeBasedAnimation(this.eyeCentering,
+      t.tumbleAnimation = new TumbleAnimation(sign, t.pos.y);
+      t.eyeCenteringAnimation = new TimeBasedAnimation(t.eyeCentering,
           1, Constants.eyeCenteringDurationSeconds);
     }
 
-    if (Math.abs(this.vSquishVel + this.vSquish) < 0.2) {
+    if (Math.abs(t.vSquishVel + t.vSquish) < 0.2) {
       // Squish damping when the energy is below threshold.
-      this.vSquishVel = this.vSquish = 0;
+      t.vSquishVel = t.vSquish = 0;
     } else {
       // squish stiffness
       const k = 200.0;
       const damping = 8.5;
 
-      const squishForce = -k * this.vSquish;
-      const dampingForce = damping * this.vSquishVel;
-      this.vSquishVel +=
+      const squishForce = -k * t.vSquish;
+      const dampingForce = damping * t.vSquishVel;
+      t.vSquishVel +=
           (squishForce - dampingForce) * dt;
-      this.vSquishVel = clamp(
-          this.vSquishVel, -Constants.maxSquishVel, Constants.maxSquishVel);
-      this.vSquish += this.vSquishVel * dt;
+      t.vSquishVel = clamp(
+          t.vSquishVel, -MaxSquishVel, MaxSquishVel);
+      t.vSquish += t.vSquishVel * dt;
     }
 
-    if (this.eyeCenteringAnimation != null) {
-      this.eyeCentering = this.eyeCenteringAnimation.value();
-      if (this.eyeCenteringAnimation.isDone()) {
-        this.eyeCenteringAnimation = null;
+    if (t.eyeCenteringAnimation != null) {
+      t.eyeCentering = t.eyeCenteringAnimation.value();
+      if (t.eyeCenteringAnimation.isDone()) {
+        t.eyeCenteringAnimation = null;
       }
     }
   }
 
   isInContactWithGround() {
-    return this.getContactHeight() !== -1;
+    return t.getContactHeight() !== -1;
   }
 }
 */
