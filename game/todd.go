@@ -39,20 +39,21 @@ type Todd struct {
 	// During tumbling, this animates to 1, which means completely centered.
 	// When tumbling ends, this animates to 0, which means "where it wants to be".
 	eyeCentering          float64
-	eyeCenteringAnimation *Animation
+	eyeCenteringAnimation Animation
 }
 
 func (t *Todd) Gravity() float64 {
-	if t.vel.Y > 0 && JumpState == JumpStateJumping {
+	if t.vel.Y > 0 && World.JumpState == JumpStateJumping {
 		return Gravity * JumpStateGravityFactor
 	}
 	return Gravity
 }
 
 func (t *Todd) Update(s *engine.UpdateState) {
+	dt := s.DeltaSeconds
 
 	if t.blinkCumulativeTime != -1 {
-		t.blinkCumulativeTime += s.DeltaSeconds
+		t.blinkCumulativeTime += dt
 		if t.blinkCumulativeTime >= BlinkCycleSeconds {
 			t.blinkCumulativeTime = -1
 		}
@@ -61,6 +62,103 @@ func (t *Todd) Update(s *engine.UpdateState) {
 	if rand.Float32() < 0.001 {
 		t.Blink()
 	}
+
+	wantJump := World.Controller.Jump()
+
+	t.AccelY(t.Gravity() * dt)
+	if t.IsInContactWithGround() {
+		if wantJump && World.JumpState == JumpStateIdle {
+			t.Jump()
+		} else if !wantJump && World.JumpState == JumpStateLanded {
+			World.JumpState = JumpStateIdle
+		}
+	}
+
+	t.pos.X += t.vel.X * dt
+	if t.Right() > WorldBounds.Right() {
+		t.pos.X = WorldBounds.Right() - t.sideLength/2
+	} else if t.Left() < WorldBounds.Left() {
+		t.pos.X = t.sideLength / 2
+	}
+
+	// Collisions.
+	currentY := t.pos.Y
+	t.pos.Y = currentY + t.vel.Y*dt
+	colliding := false
+	if t.pos.Y <= 0 {
+		colliding = true
+		t.pos.Y = 0
+	} else {
+		margin := PlatformMargin(t.vel.X)
+		for _, plat := range World.Platforms {
+			if currentY >= plat.bounds.Top() && t.pos.Y <= plat.bounds.Top() &&
+				t.Right() >= plat.bounds.Left()+margin &&
+				t.Left() <= plat.bounds.Right()-margin {
+				colliding = true
+				t.pos.Y = plat.bounds.Top()
+				break
+			}
+		}
+	}
+	oldvel := t.vel.Y
+	if colliding {
+		t.vel.Y = 0
+		t.tumbleAnimation = nil
+	}
+	if World.JumpState == JumpStateJumping {
+		if colliding {
+			t.eyeCenteringAnimation = NewAnimation(t.eyeCentering, 0, s.NowSeconds, EyeCenteringDurationSeconds)
+			// blink on hard landing
+			if oldvel > TerminalVelocity*0.95 {
+				t.Blink()
+			}
+			t.vSquishVel = -oldvel / 5.0
+			if wantJump {
+				World.JumpState = JumpStateLanded
+			} else {
+				World.JumpState = JumpStateIdle
+			}
+		}
+	} else if !colliding {
+		World.JumpState = JumpStateJumping // we fell off a platform
+		// Squish, but, if already squishing, squish in that direction.
+		if MaxSquishVel > math.Abs(t.vSquishVel) {
+			t.vSquishVel = math.Copysign(MaxSquishVel, t.vSquishVel)
+		}
+		dir := Clockwise
+		if t.vel.X < 0 || World.Controller.Left() {
+			dir = CounterClockwise
+		}
+		t.tumbleAnimation = NewTumbleAnimation(dir, t.pos.Y)
+		t.eyeCenteringAnimation = NewAnimation(t.eyeCentering,
+			1, s.NowSeconds, EyeCenteringDurationSeconds)
+	}
+
+	if math.Abs(t.vSquishVel+t.vSquish) < 0.2 {
+		// Squish damping when the energy is below threshold.
+		t.vSquishVel = 0
+		t.vSquish = 0
+	} else {
+		// squish stiffness
+		const k = 200.0
+		const damping = 8.5
+
+		squishForce := -k * t.vSquish
+		dampingForce := damping * t.vSquishVel
+		t.vSquishVel +=
+			(squishForce - dampingForce) * dt
+		t.vSquishVel = Clamp(
+			t.vSquishVel, -MaxSquishVel, MaxSquishVel)
+		t.vSquish += t.vSquishVel * dt
+	}
+
+	if t.eyeCenteringAnimation != nil {
+		t.eyeCentering = t.eyeCenteringAnimation.Value(s.NowSeconds)
+		if t.eyeCenteringAnimation.IsDone(s.NowSeconds) {
+			t.eyeCenteringAnimation = nil
+		}
+	}
+
 }
 
 func (t *Todd) Blink() {
@@ -134,7 +232,7 @@ func (t *Todd) AccelX(a float64) {
 func (t *Todd) AccelY(a float64) {
 	t.vel.Y = t.vel.Y + a
 	maxVel := TerminalVelocity
-	if ToddController.Jump() {
+	if World.Controller.Jump() {
 		maxVel = JumpTerminalVelocity
 	}
 	if t.vel.Y > maxVel {
@@ -147,7 +245,7 @@ func (t *Todd) AdjustBearing(a float64) {
 }
 
 func (t *Todd) Jump() {
-	JumpState = JumpStateJumping
+	World.JumpState = JumpStateJumping
 	t.initialJumpSpeed = math.Abs(t.vel.X)
 	t.vel.Y = GetJumpImpulse(t.initialJumpSpeed)
 	t.vSquishVel = MaxSquishVel
@@ -167,6 +265,10 @@ func (t *Todd) Left() float64 {
 
 func (t *Todd) Right() float64 {
 	return t.pos.X + t.sideLength/2
+}
+
+func (t *Todd) IsInContactWithGround() bool {
+	return t.GetContactHeight() != -1
 }
 
 // Y value of surface top or -1 for not landing.
@@ -195,7 +297,7 @@ func (t *Todd) GetContactHeight() float64 {
 
 
  func (t* Todd)  move(dt) {
-    t.yAccel(t.getGravity() * dt);
+    t.YAccel(t.getGravity() * dt);
     if (t.isInContactWithGround()) {
       if (World.controller.jump && World.isJumpIdle()) {
         t.jump();
@@ -205,35 +307,35 @@ func (t *Todd) GetContactHeight() float64 {
     }
 
 
-    t.pos.x += t.vel.x * dt;
-    if (t.pos.x > width) {
-      t.pos.x = 0;
-    } else if (t.pos.x < 0) {
-      t.pos.x = width;
+    t.pos.X += t.vel.X * dt;
+    if (t.pos.X > width) {
+      t.pos.X = 0;
+    } else if (t.pos.X < 0) {
+      t.pos.X = width;
     }
 
     // Collisions.
-    const currentY = t.pos.y;
-    t.pos.y = currentY + t.vel.y * dt;
+    const currentY = t.pos.Y;
+    t.pos.Y = currentY + t.vel.Y * dt;
     let colliding = false;
-    if (t.pos.y >= height) {
+    if (t.pos.Y >= height) {
       colliding = true;
-      t.pos.y = height;
+      t.pos.Y = height;
     } else {
-      const margin = t.platformMargin(t.vel.x);
+      const margin = t.platformMargin(t.vel.X);
       for (const plat of World.platforms) {
-        if (currentY <= plat.top && t.pos.y >= plat.top &&
+        if (currentY <= plat.top && t.pos.Y >= plat.top &&
             t.right() >= plat.left + margin &&
             t.left() <= plat.right - margin) {
           colliding = true;
-          t.pos.y = plat.top;
+          t.pos.Y = plat.top;
           break;
         }
       }
     }
-    const oldvel = t.vel.y;
+    const oldvel = t.vel.Y;
     if (colliding) {
-      t.vel.y = 0;
+      t.vel.Y = 0;
       t.tumbleAnimation = null;
     }
     if (World.isJumpJumping()) {
@@ -255,13 +357,13 @@ func (t *Todd) GetContactHeight() float64 {
       if (MaxSquishVel > Math.abs(t.vSquishVel)) {
         t.vSquishVel = MaxSquishVel * Math.sign(t.vSquishVel);
       }
-      let sign = Math.sign(t.vel.x);
+      let sign = Math.sign(t.vel.X);
       if (World.controller.left) {
         sign = -1;
       } else if (World.controller.right) {
         sign = 1;
       }
-      t.tumbleAnimation = new TumbleAnimation(sign, t.pos.y);
+      t.tumbleAnimation = new TumbleAnimation(sign, t.pos.Y);
       t.eyeCenteringAnimation = new TimeBasedAnimation(t.eyeCentering,
           1, Constants.eyeCenteringDurationSeconds);
     }

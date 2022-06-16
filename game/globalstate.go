@@ -13,6 +13,7 @@ type GlobalStateType struct {
 	Controller   Controller
 	TumbleLevels []float64
 	Platforms    []Platform
+	JumpState    JumpStateType
 }
 
 type Controller interface {
@@ -37,13 +38,13 @@ func (wrapper engineControllerWrapper) Jump() bool {
 	return wrapper.InputState.Spacebar
 }
 
+type JumpStateType int
+
 const (
-	JumpStateIdle = iota
+	JumpStateIdle JumpStateType = iota
 	JumpStateJumping
 	JumpStateLanded
 )
-
-var JumpState = JumpStateIdle
 
 var TumbleLevels []float64
 
@@ -69,3 +70,5 @@ func InitPlatforms() {
 func SetControllerState(input *engine.InputState) {
 	World.Controller = engineControllerWrapper{input}
 }
+
+var WorldBounds = engine.NewRect(-100, 0, 100, 50)
