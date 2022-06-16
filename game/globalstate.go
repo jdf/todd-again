@@ -7,6 +7,14 @@ import (
 	"github.com/jdf/todd-again/engine"
 )
 
+var World = GlobalStateType{}
+
+type GlobalStateType struct {
+	Controller   Controller
+	TumbleLevels []float64
+	Platforms    []Platform
+}
+
 type Controller interface {
 	Left() bool
 	Right() bool
@@ -28,8 +36,6 @@ func (wrapper engineControllerWrapper) Right() bool {
 func (wrapper engineControllerWrapper) Jump() bool {
 	return wrapper.InputState.Spacebar
 }
-
-var ToddController Controller
 
 const (
 	JumpStateIdle = iota
@@ -61,5 +67,5 @@ func InitPlatforms() {
 }
 
 func SetControllerState(input *engine.InputState) {
-	ToddController = engineControllerWrapper{input}
+	World.Controller = engineControllerWrapper{input}
 }
