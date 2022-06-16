@@ -148,50 +148,51 @@ func (t *Todd) AdjustBearing(a float64) {
 
 func (t *Todd) Jump() {
 	JumpState = JumpStateJumping
-	World.setJumpState(World.JumpState.jumping)
-	t.initialJumpSpeed = Math.abs(t.vel.x)
-	t.vel.y = t.getJumpImpulse(t.initialJumpSpeed)
+	t.initialJumpSpeed = math.Abs(t.vel.X)
+	t.vel.Y = GetJumpImpulse(t.initialJumpSpeed)
 	t.vSquishVel = MaxSquishVel
+}
+
+func (t *Todd) ApplyFriction() {
+	t.vel.X *= Friction
+}
+
+func (t *Todd) ApplyBearingFriction() {
+	t.bearing *= BearingFriction
+}
+
+func (t *Todd) Left() float64 {
+	return t.pos.X - t.sideLength/2
+}
+
+func (t *Todd) Right() float64 {
+	return t.pos.X + t.sideLength/2
+}
+
+// Y value of surface top or -1 for not landing.
+func (t *Todd) GetContactHeight() float64 {
+	if t.pos.Y <= 0 {
+		return 0
+	}
+	// can't land if we're moving up
+	if t.vel.Y > 0 {
+		return -1
+	}
+	margin := PlatformMargin(t.vel.X)
+	for _, plat := range World.Platforms {
+		if t.pos.Y >= plat.bounds.Bottom() &&
+			t.pos.Y <= plat.bounds.Top() &&
+			t.Right() >= plat.bounds.Left()+margin &&
+			t.Left() <= plat.bounds.Right()-margin {
+			return plat.bounds.Top()
+		}
+	}
+	return -1
 }
 
 /*
 
-  func (t* Todd) applyFriction() {
-    t.vel.x *= Constants.friction;
-  }
 
- func (t* Todd)  applyBearingFriction() {
-    t.bearing *= Constants.bearingFriction;
-  }
-
-  func (t* Todd) left() {
-    return t.pos.x - t.sideLength / 2;
-  }
-
-  func (t* Todd) right() {
-    return t.pos.x + t.sideLength / 2;
-  }
-
-  // Y value of surface top or -1 for not landing.
- func (t* Todd)  getContactHeight() {
-    if (t.pos.y >= height) {
-      return height;
-    }
-    // can't land if we're moving up
-    if (t.vel.y < 0) {
-      return -1;
-    }
-    const margin = t.platformMargin(t.vel.x);
-    for (const plat of World.platforms) {
-      if (t.pos.y >= plat.top &&
-          t.pos.y <= plat.bottom &&
-          t.right() >= plat.left + margin &&
-          t.left() <= plat.right - margin) {
-        return plat.top;
-      }
-    }
-    return -1;
-  }
 
  func (t* Todd)  move(dt) {
     t.yAccel(t.getGravity() * dt);
