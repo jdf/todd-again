@@ -10,12 +10,11 @@ import (
 )
 
 type Level struct {
-	camera *engine.Camera
-	todd   *Todd
+	todd *Todd
 }
 
 func (level *Level) Draw(img *ebiten.Image, ctx *engine.Graphics) {
-	ctx.SetWorldToScreen(level.camera.GetTransform())
+	ctx.SetWorldToScreen(Camera.GetTransform())
 	for _, plat := range Platforms {
 		plat.Draw(img, ctx)
 	}
@@ -24,7 +23,7 @@ func (level *Level) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 
 func (level *Level) Resize(w, h int) {
 	ar := float64(w) / float64(h)
-	level.camera = engine.NewCamera(
+	Camera = engine.NewCamera(
 		engine.NewRect(-200, 0, 200, 400.0/ar),
 		engine.NewRect(0, 0, w, h),
 		engine.FlipYAxis)
@@ -33,7 +32,7 @@ func (level *Level) Resize(w, h int) {
 func (level *Level) Update(s *engine.UpdateState) {
 	SetControllerState(s.Input)
 	level.todd.Update(s)
-	level.camera.CenterHorizontalOn(level.todd.pos.X)
+	Camera.CenterHorizontalOn(level.todd.pos.X)
 }
 
 func Level1() *Level {
