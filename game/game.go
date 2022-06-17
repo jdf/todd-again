@@ -2,7 +2,10 @@ package game
 
 import (
 	"image/color"
+	"math/rand"
+	"time"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
 )
 
@@ -11,9 +14,9 @@ type Level struct {
 	todd   *Todd
 }
 
-func (level *Level) Draw(ctx *engine.Graphics) {
+func (level *Level) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 	ctx.SetWorldToScreen(level.camera.GetTransform())
-	level.todd.Draw(ctx)
+	level.todd.Draw(img, ctx)
 }
 
 func (level *Level) Resize(w, h int) {
@@ -31,11 +34,14 @@ func (level *Level) Update(s *engine.UpdateState) {
 
 func Level1() *Level {
 	InitPlatforms()
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	level := &Level{
 		todd: &Todd{
 			sideLength: 30,
 			fillColor:  color.RGBA{R: 233, G: 180, B: 30, A: 255},
-			pos:        engine.Vec2{X: 0, Y: 1},
+			pos:        engine.Vec2{X: 0, Y: 0},
+			rnd:        r,
 		},
 	}
 	return level

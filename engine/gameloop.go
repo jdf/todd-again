@@ -3,12 +3,10 @@ package engine
 import (
 	"errors"
 	"fmt"
-	"image"
 	"image/color"
 	"log"
 	"time"
 
-	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine/dbgassets"
@@ -18,7 +16,7 @@ import (
 const (
 	// Fixed timestep for physics simulation, independent of ebiten update frequency.
 	tick                        = 1 / 180.0
-	maxOffscreenBufferDimension = 2048
+	maxOffscreenBufferDimension = 4096
 )
 
 const debug = true
@@ -43,10 +41,9 @@ type ebitenGame struct {
 	window windowInfo
 
 	// Graphics stuff.
-	gfx         *Graphics
-	frameBuffer *image.RGBA
-	debugFont   *truetype.Font
-	debugFace   font.Face
+	gfx       *Graphics
+	debugFont *truetype.Font
+	debugFace font.Face
 
 	// We maintain an accumulator of excess time remaining after going through
 	// physics ticks.
@@ -83,30 +80,25 @@ func (game *ebitenGame) Update() error {
 	return nil
 }
 
-func drawDebugInfo(game *ebitenGame) {
-	g := game.gfx.GetScreenContext()
-	g.SetFontFace(game.debugFace)
+func drawDebugInfo(img *ebiten.Image, game *ebitenGame) {
+	g := game.gfx
+	g.SetFont(game.debugFace)
 	g.SetColor(color.RGBA{0, 0, 0, 200})
 	//g.FillRectScreen(NewRect(2, 2, 120, 24))
 
 	g.SetColor(color.RGBA{128, 128, 128, 255})
-	g.DrawString(
+	g.DrawTextScreen(img,
 		fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()),
 		4, 18)
 }
 
 // Draw draws the game screen in ebiten.
 func (game *ebitenGame) Draw(screen *ebiten.Image) {
-	g := game.gfx.GetScreenContext()
-
-	g.SetRGB(0, 0, 0)
-	g.Clear()
-	game.userGame.Draw(game.gfx)
+	game.userGame.Draw(screen, game.gfx)
 
 	if debug {
-		drawDebugInfo(game)
+		drawDebugInfo(screen, game)
 	}
-	screen.ReplacePixels(game.frameBuffer.Pix)
 }
 
 // Layout has a	party with gnomes.
@@ -116,8 +108,9 @@ func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 		log.Printf("layout %dx%d", outsideWidth, outsideHeight)
 		win.lastW = outsideWidth
 		win.lastH = outsideHeight
-		s := 1.0 // ebiten.DeviceScaleFactor()
+		s := ebiten.DeviceScaleFactor()
 		w, h := s*float64(outsideWidth), s*float64(outsideHeight)
+		log.Printf("scaled %0.1fx%0.1f", w, h)
 		if w/h > win.aspectRatio {
 			w = h * win.aspectRatio
 		} else {
@@ -128,13 +121,12 @@ func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 			h *= .5
 		}
 		win.bufW, win.bufH = int(w), int(h)
-		img := image.NewRGBA(image.Rect(0, 0, win.bufW, win.bufH))
-		game.frameBuffer = img
-		game.gfx = NewGraphics(gg.NewContextForRGBA(img))
+		game.gfx = NewGraphics()
 		game.userGame.Resize(win.bufW, win.bufH)
 		game.debugFace = truetype.NewFace(game.debugFont, &truetype.Options{
-			Size: 9,
-			DPI:  72 * ebiten.DeviceScaleFactor(),
+			Size:    9,
+			DPI:     72 * ebiten.DeviceScaleFactor(),
+			Hinting: font.HintingFull,
 		})
 		log.Printf("buffer size: %d, %d", win.bufW, win.bufH)
 	}
@@ -145,7 +137,7 @@ func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 func RunGameLoop(userGame Game, width, height int, title string) {
 	ebiten.SetWindowSize(width, height)
 	ebiten.SetWindowTitle(title)
-	ebiten.SetScreenClearedEveryFrame(false) // we blit the whole frame anyway
+	ebiten.SetScreenClearedEveryFrame(true)
 
 	font := dbgassets.GetFontOrDie("InstructionBold.ttf")
 

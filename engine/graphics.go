@@ -1,16 +1,33 @@
 package engine
 
 import (
+	"image"
 	"image/color"
 	"math"
 
-	"github.com/fogleman/gg"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font"
 )
+
+var (
+	emptyImage = ebiten.NewImage(3, 3)
+
+	// emptySubImage is an internal sub image of emptyImage.
+	// Use emptySubImage at DrawTriangles instead of emptyImage in order to avoid bleeding edges.
+	emptySubImage = emptyImage.SubImage(image.Rect(1, 1, 2, 2)).(*ebiten.Image)
+)
+
+func init() {
+	emptyImage.Fill(color.White)
+}
 
 // Graphics is a graphics context that knows how to manipulate
 // coordinates with a camera.
 type Graphics struct {
-	context gg.Context
+	color color.Color
+	font  font.Face
 
 	worldToScreen *Affine
 
@@ -20,9 +37,9 @@ type Graphics struct {
 	cachedObjectToScreen *Affine
 }
 
-func NewGraphics(wrapped *gg.Context) *Graphics {
+func NewGraphics() *Graphics {
 	return &Graphics{
-		context:              *wrapped,
+		color:                color.White,
 		objectToWorld:        *Identity(),
 		stack:                &Stack[Affine]{},
 		worldToScreen:        Identity(),
@@ -30,20 +47,12 @@ func NewGraphics(wrapped *gg.Context) *Graphics {
 	}
 }
 
+func (g *Graphics) SetFont(font font.Face) {
+	g.font = font
+}
+
 func (g *Graphics) SetColor(color color.Color) {
-	g.context.SetColor(color)
-}
-
-func (g *Graphics) Fill() {
-	g.context.Fill()
-}
-
-func (g *Graphics) Stroke() {
-	g.context.Stroke()
-}
-
-func (g *Graphics) GetScreenContext() *gg.Context {
-	return &g.context
+	g.color = color
 }
 
 func (g *Graphics) Translate(x, y float64) {
@@ -84,23 +93,43 @@ func (g *Graphics) Pop() {
 }
 
 // DrawTextScreen draws text at the given position in screen space.
-func (g *Graphics) DrawTextScreen(s string, x, y float64) {
-	g.context.DrawString(s, x, y)
+func (g *Graphics) DrawTextScreen(img *ebiten.Image, s string, x, y int) {
+	text.Draw(img, s, g.font, x, y, g.color)
+}
+
+func (g *Graphics) fillPath(img *ebiten.Image, p *vector.Path) {
+	red, green, blue, _ := g.color.RGBA()
+	vs, i := p.AppendVerticesAndIndicesForFilling(nil, nil)
+	for i := range vs {
+		vs[i].SrcX = 1
+		vs[i].SrcY = 1
+		vs[i].ColorR = float32(red>>8) / float32(0xff)
+		vs[i].ColorG = float32(green>>8) / float32(0xff)
+		vs[i].ColorB = float32(blue>>8) / float32(0xff)
+	}
+	img.DrawTriangles(vs, i, emptySubImage, nil)
 }
 
 // DrawLine draws a line from x1,y1 to x2,y2 in object space.
-func (g *Graphics) DrawLine(x1, y1, x2, y2 float64) {
-	g.context.MoveTo(g.ObjectToScreen().Transform(x1, y1))
-	g.context.LineTo(g.ObjectToScreen().Transform(x2, y2))
+func (g *Graphics) DrawLine(img *ebiten.Image, x1, y1, x2, y2 float64) {
+	path := &vector.Path{}
+	x1, y1 = g.ObjectToScreen().Transform(x1, y1)
+	x2, y2 = g.ObjectToScreen().Transform(x2, y2)
+	path.MoveTo(float32(x1), float32(y1))
+	path.LineTo(float32(x2), float32(y2))
+	g.fillPath(img, path)
 }
 
-func (g *Graphics) DrawRect(r *Rect) {
+func (g *Graphics) DrawRect(img *ebiten.Image, r *Rect) {
 	sr := g.ObjectToScreen().TransformRect(r)
-	g.context.MoveTo(sr.Min.X, sr.Min.Y)
-	g.context.LineTo(sr.Max.X, sr.Min.Y)
-	g.context.LineTo(sr.Max.X, sr.Max.Y)
-	g.context.LineTo(sr.Min.X, sr.Max.Y)
-	g.context.LineTo(sr.Min.X, sr.Min.Y)
+	path := &vector.Path{}
+	minx, miny, maxx, maxy := float32(sr.Min.X), float32(sr.Min.Y), float32(sr.Max.X), float32(sr.Max.Y)
+	path.MoveTo(minx, miny)
+	path.LineTo(maxx, miny)
+	path.LineTo(maxx, maxy)
+	path.LineTo(minx, maxy)
+	path.LineTo(minx, miny)
+	g.fillPath(img, path)
 }
 
 type PathMode int
@@ -110,7 +139,7 @@ const (
 	PathModeNewShape
 )
 
-func (g *Graphics) drawEllipticalArc(center, radii *Vec2, startAngle, endAngle float64, mode PathMode) {
+func (g *Graphics) appendEllipticalArc(p *vector.Path, center, radii *Vec2, startAngle, endAngle float64, mode PathMode) {
 	angleDelta := math.Abs(math.Atan2(math.Sin(startAngle-endAngle), math.Cos(startAngle-endAngle)))
 	n := int(math.Round(4.0 * angleDelta / (.5 * math.Pi)))
 	if n == 0 {
@@ -139,20 +168,21 @@ func (g *Graphics) drawEllipticalArc(center, radii *Vec2, startAngle, endAngle f
 		if i == 0 {
 			if mode == PathModeContinue {
 				//fmt.Printf("LineTo(%v, %v)\n", x0, y0)
-				g.context.LineTo(x0, y0)
+				p.LineTo(float32(x0), float32(y0))
 			} else {
 				//fmt.Printf("MoveTo(%v, %v)\n", x0, y0)
-				g.context.MoveTo(x0, y0)
+				p.MoveTo(float32(x0), float32(y0))
 			}
 		}
 		//fmt.Printf("QuadraticTo(%v, %v)\n", x2, y2)
-		g.context.QuadraticTo(cx, cy, x2, y2)
+		p.QuadTo(float32(cx), float32(cy), float32(x2), float32(y2))
 	}
 }
 
 var kCornerAngles = []float64{1.5 * math.Pi, math.Pi, .5 * math.Pi, 0, -.5 * math.Pi}
 
-func (g *Graphics) DrawRoundedRect(r *Rect, radius float64) {
+func (g *Graphics) DrawRoundedRect(img *ebiten.Image, r *Rect, radius float64) {
+	path := &vector.Path{}
 	maxRadius := math.Min(.5*r.Width(), .5*r.Height())
 	actualRadius := math.Min(radius, maxRadius)
 	radii := Vec(actualRadius, actualRadius)
@@ -162,12 +192,13 @@ func (g *Graphics) DrawRoundedRect(r *Rect, radius float64) {
 		if i == 0 {
 			pathMode = PathModeNewShape
 		}
-		g.drawEllipticalArc(&arcCenters[i], radii, kCornerAngles[i], kCornerAngles[i+1], pathMode)
+		g.appendEllipticalArc(path, &arcCenters[i], radii, kCornerAngles[i], kCornerAngles[i+1], pathMode)
 	}
-	g.context.ClosePath()
+	g.fillPath(img, path)
 }
 
-func (g *Graphics) DrawEllipse(r *Rect) {
-	g.drawEllipticalArc(r.Center(), r.Size().Mul(.5), 0, 2*math.Pi, PathModeNewShape)
-	g.context.ClosePath()
+func (g *Graphics) DrawEllipse(img *ebiten.Image, r *Rect) {
+	path := &vector.Path{}
+	g.appendEllipticalArc(path, r.Center(), r.Size().Mul(.5), 0, 2*math.Pi, PathModeNewShape)
+	g.fillPath(img, path)
 }
