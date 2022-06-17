@@ -1,6 +1,7 @@
 package game
 
 import (
+	"context"
 	"fmt"
 	"image/color"
 	"math"
@@ -144,6 +145,7 @@ func (t *Todd) Update(s *engine.UpdateState) {
 			} else {
 				World.JumpState = JumpStateIdle
 			}
+			Bus.Emit(context.Background(), ToddVerticalLevelChanged, t.pos)
 		}
 	} else if !colliding {
 		World.JumpState = JumpStateJumping // we fell off a platform
