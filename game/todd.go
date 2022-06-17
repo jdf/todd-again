@@ -162,14 +162,14 @@ func (t *Todd) Update(s *engine.UpdateState) {
 			1, s.NowSeconds, EyeCenteringDurationSeconds)
 	}
 
-	if math.Abs(t.vSquishVel+t.vSquish) < 0.2 {
+	if math.Abs(t.vSquishVel+t.vSquish) < 0.01 {
 		// Squish damping when the energy is below threshold.
 		t.vSquishVel = 0
 		t.vSquish = 0
 	} else {
 		// squish stiffness
 		const k = 100.0
-		const damping = 8.5
+		const damping = 7.5 //8.5
 
 		squishForce := -k * t.vSquish
 		dampingForce := damping * t.vSquishVel
