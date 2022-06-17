@@ -41,10 +41,16 @@ func (t *TumbleAnimation) AngleFor(height float64) float64 {
 	if height >= t.startHeight {
 		return t.startAngle
 	}
+
 	if height <= t.targetHeight {
 		t.startHeight = t.targetHeight
 		t.targetHeight = nextTumbleHeight(t.startHeight)
 		t.startAngle += (math.Pi / 2.0) * float64(t.sign)
 	}
-	return t.startAngle + (height-t.startHeight)*t.sign
+
+	totalDelta := t.targetHeight - t.startHeight
+	delta := height - t.startHeight
+	ratio := delta / totalDelta
+
+	return t.startAngle + ratio*(math.Pi/2.0)*t.sign
 }
