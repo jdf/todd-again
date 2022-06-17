@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
 )
 
@@ -41,6 +42,8 @@ type Todd struct {
 	// When tumbling ends, this animates to 0, which means "where it wants to be".
 	eyeCentering          float64
 	eyeCenteringAnimation Animation
+
+	rnd *rand.Rand
 }
 
 func (t *Todd) String() string {
@@ -82,7 +85,7 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		}
 	}
 
-	if rand.Float32() < 0.001 {
+	if t.rnd.Float64() < 0.001 {
 		t.Blink()
 	}
 
@@ -190,7 +193,7 @@ func (t *Todd) Blink() {
 	}
 }
 
-func (t *Todd) Draw(g *engine.Graphics) {
+func (t *Todd) Draw(img *ebiten.Image, g *engine.Graphics) {
 	x, y := t.pos.X, t.pos.Y
 	s := t.sideLength
 	half := s / 2.0
@@ -205,16 +208,13 @@ func (t *Todd) Draw(g *engine.Graphics) {
 	}
 	width := s - xsquish
 	height := s + ysquish
-	g.DrawRoundedRect(engine.NewRect(-width/2, 0, width/2, height), s/8)
 	g.SetColor(t.fillColor)
-	g.Fill()
+	g.DrawRoundedRect(img, engine.NewRect(-width/2, 0, width/2, height), s/8)
 
 	if debugTodd {
 		g.SetColor(debugColor)
-		g.DrawLine(-.5, -.5, .5, .5)
-		g.Stroke()
-		g.DrawLine(-.5, .5, .5, -.5)
-		g.Stroke()
+		g.DrawLine(img, -.5, -.5, .5, .5)
+		g.DrawLine(img, -.5, .5, .5, -.5)
 	}
 
 	speedRatio := math.Abs(t.bearing / Maxvel)
@@ -229,20 +229,17 @@ func (t *Todd) Draw(g *engine.Graphics) {
 		eyePos = LerpVec(eyePos, center, t.eyeCentering)
 		pupilPos = LerpVec(pupilPos, center, t.eyeCentering)
 	}
-	g.DrawEllipse(engine.NewRect(eyePos.X-5, eyePos.Y-5, eyePos.X+5, eyePos.Y+5))
 	g.SetColor(color.White)
-	g.Fill()
-	g.DrawEllipse(engine.NewRect(pupilPos.X-1.5, pupilPos.Y-1.5, pupilPos.X+1.5, pupilPos.Y+1.5))
+	g.DrawEllipse(img, engine.NewRect(eyePos.X-5, eyePos.Y-5, eyePos.X+5, eyePos.Y+5))
 	g.SetColor(color.Black)
-	g.Fill()
+	g.DrawEllipse(img, engine.NewRect(pupilPos.X-1.5, pupilPos.Y-1.5, pupilPos.X+1.5, pupilPos.Y+1.5))
 
 	if t.blinkCumulativeTime != -1 {
 		blinkCycle := t.blinkCumulativeTime / BlinkCycleSeconds
-		g.SetColor(t.fillColor)
 		lidTop := eyePos.Y + 6
 		lidBottom := lidTop - 12*math.Sin(math.Pi*blinkCycle)
-		g.DrawRect(engine.NewRect(-half+3, lidBottom, half-3, lidTop))
-		g.Fill()
+		g.SetColor(t.fillColor)
+		g.DrawRect(img, engine.NewRect(-half+3, lidBottom, half-3, lidTop))
 	}
 
 	g.Pop()

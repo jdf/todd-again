@@ -3,6 +3,7 @@ package game
 import (
 	"image/color"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
 )
 
@@ -11,8 +12,7 @@ type Platform struct {
 	color  color.Color
 }
 
-func (platform *Platform) Draw(g *engine.Graphics) {
+func (platform *Platform) Draw(img *ebiten.Image, g *engine.Graphics) {
 	g.SetColor(platform.color)
-	g.DrawRoundedRect(platform.bounds, 5)
-	g.Fill()
+	g.DrawRoundedRect(img, platform.bounds, 5)
 }

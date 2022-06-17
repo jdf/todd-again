@@ -1,5 +1,7 @@
 package engine
 
+import "github.com/hajimehoshi/ebiten/v2"
+
 type UpdateState struct {
 	Input        *InputState
 	NowSeconds   float64
@@ -9,5 +11,5 @@ type UpdateState struct {
 type Game interface {
 	Resize(w, h int)
 	Update(*UpdateState)
-	Draw(*Graphics)
+	Draw(*ebiten.Image, *Graphics)
 }
