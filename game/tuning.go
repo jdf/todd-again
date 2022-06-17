@@ -12,7 +12,7 @@ const Side = 30
 const Friction = 0.97
 
 // A unitless constant that we apply to bearing when not accelerating.
-const BearingFriction = 0.8
+const BearingFriction = 0.95
 
 // The following constants are pixels per second.
 const Gravity = -1400.0
