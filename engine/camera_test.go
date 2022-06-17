@@ -4,10 +4,6 @@ import (
 	"testing"
 )
 
-type Vec2 = Vec2
-
-var NewRect = NewRect
-
 func TestNonInverted(t *testing.T) {
 	// We imagine a world from -100, -100 to 100, 100.
 	// We map it to a display from 0, 0 to 1, 1.

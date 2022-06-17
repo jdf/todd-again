@@ -16,9 +16,11 @@ const ToddVerticalLevelChanged = "todd.vertical.level.changed"
 const CameraVerticalLevelChangedHandlerKey = "camera.vertical.level.changed"
 
 var (
-	Bus    *bus.Bus
-	World  = GlobalStateType{}
-	Camera *engine.Camera
+	Bus         *bus.Bus
+	Controller  engine.Controller
+	Camera      *engine.Camera
+	WorldBounds = engine.NewRect(-1000, 0, 1000, 200)
+	JumpState   JumpStateType
 )
 
 func init() {
@@ -40,34 +42,8 @@ func init() {
 		},
 		Matcher: ToddVerticalLevelChanged,
 	})
-}
 
-type GlobalStateType struct {
-	Controller   Controller
-	TumbleLevels []float64
-	JumpState    JumpStateType
-}
-
-type Controller interface {
-	Left() bool
-	Right() bool
-	Jump() bool
-}
-
-type engineControllerWrapper struct {
-	*engine.InputState
-}
-
-func (wrapper engineControllerWrapper) Left() bool {
-	return wrapper.InputState.Left
-}
-
-func (wrapper engineControllerWrapper) Right() bool {
-	return wrapper.InputState.Right
-}
-
-func (wrapper engineControllerWrapper) Jump() bool {
-	return wrapper.InputState.Spacebar
+	Controller = engine.EbitenController{}
 }
 
 type JumpStateType int
@@ -77,9 +53,3 @@ const (
 	JumpStateJumping
 	JumpStateLanded
 )
-
-func SetControllerState(input *engine.InputState) {
-	World.Controller = engineControllerWrapper{input}
-}
-
-var WorldBounds = engine.NewRect(-1000, 0, 1000, 200)

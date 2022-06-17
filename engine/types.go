@@ -4,12 +4,20 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// Numeric types can be used as coordinate components.
-type Numeric interface {
-	constraints.Float | constraints.Integer
-}
+type (
+	// Numeric types can be used as coordinate components.
+	Numeric interface {
+		constraints.Float | constraints.Integer
+	}
 
-type Stack[T any] []T
+	Stack[T any] []T
+
+	Controller interface {
+		Left() bool
+		Right() bool
+		Jump() bool
+	}
+)
 
 func (t *Stack[T]) Push(v T) {
 	*t = append(*t, v)

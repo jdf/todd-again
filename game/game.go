@@ -9,11 +9,11 @@ import (
 	"github.com/jdf/todd-again/engine"
 )
 
-type Level struct {
+type ToddGame struct {
 	todd *Todd
 }
 
-func (level *Level) Draw(img *ebiten.Image, ctx *engine.Graphics) {
+func (level *ToddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 	ctx.SetWorldToScreen(Camera.GetTransform())
 	for _, plat := range Platforms {
 		plat.Draw(img, ctx)
@@ -21,22 +21,22 @@ func (level *Level) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 	level.todd.Draw(img, ctx)
 }
 
-func (level *Level) Resize(w, h int) {
+func (level *ToddGame) Resize(w, h int) {
 	ar := float64(w) / float64(h)
 	Camera = engine.NewCamera(
 		engine.NewRect(-200, 0, 200, 400.0/ar),
 		engine.NewRect(0, 0, w, h),
 		engine.FlipYAxis)
+	Camera.CenterHorizontalOn(level.todd.pos.X)
 }
 
-func (level *Level) Update(s *engine.UpdateState) {
-	SetControllerState(s.Input)
+func (level *ToddGame) Update(s *engine.UpdateState) {
 	level.todd.Update(s)
 	Camera.CenterHorizontalOn(level.todd.pos.X)
 }
 
-func Level1() *Level {
-	level := &Level{
+func Level1() *ToddGame {
+	level := &ToddGame{
 		todd: &Todd{
 			sideLength: ToddSideLength,
 			fillColor:  color.RGBA{R: 233, G: 180, B: 30, A: 255},

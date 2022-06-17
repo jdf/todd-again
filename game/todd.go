@@ -59,10 +59,10 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		accel = AirBending
 	}
 
-	if World.Controller.Left() {
+	if Controller.Left() {
 		t.AdjustBearing(-BearingAccel * dt)
 		t.AccelX(-accel * dt)
-	} else if World.Controller.Right() {
+	} else if Controller.Right() {
 		t.AdjustBearing(BearingAccel * dt)
 		t.AccelX(accel * dt)
 	} else {
@@ -83,7 +83,7 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		t.Blink()
 	}
 
-	wantJump := World.Controller.Jump()
+	wantJump := Controller.Jump()
 
 	gravity := Gravity
 	if t.vel.Y > 0 && wantJump {
@@ -92,10 +92,10 @@ func (t *Todd) Update(s *engine.UpdateState) {
 
 	t.AccelY(gravity * dt)
 	if t.IsInContactWithGround() {
-		if wantJump && World.JumpState == JumpStateIdle {
+		if wantJump && JumpState == JumpStateIdle {
 			t.Jump()
-		} else if !wantJump && World.JumpState == JumpStateLanded {
-			World.JumpState = JumpStateIdle
+		} else if !wantJump && JumpState == JumpStateLanded {
+			JumpState = JumpStateIdle
 		}
 	}
 
@@ -132,7 +132,7 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		t.vel.Y = 0
 		t.tumbleAnimation = nil
 	}
-	if World.JumpState == JumpStateJumping {
+	if JumpState == JumpStateJumping {
 		if colliding {
 			t.eyeCenteringAnimation = NewAnimation(t.eyeCentering, 0, s.NowSeconds, EyeCenteringDurationSeconds)
 			// blink on hard landing
@@ -141,20 +141,20 @@ func (t *Todd) Update(s *engine.UpdateState) {
 			}
 			t.vSquishVel = oldvel / 5.0
 			if wantJump {
-				World.JumpState = JumpStateLanded
+				JumpState = JumpStateLanded
 			} else {
-				World.JumpState = JumpStateIdle
+				JumpState = JumpStateIdle
 			}
 			Bus.Emit(context.Background(), ToddVerticalLevelChanged, t.pos)
 		}
 	} else if !colliding {
-		World.JumpState = JumpStateJumping // we fell off a platform
+		JumpState = JumpStateJumping // we fell off a platform
 		// Squish, but, if already squishing, squish in that direction.
 		if MaxSquishVel > math.Abs(t.vSquishVel) {
 			t.vSquishVel = math.Copysign(MaxSquishVel, t.vSquishVel)
 		}
 		dir := Clockwise
-		if t.vel.X < 0 || World.Controller.Left() {
+		if t.vel.X < 0 || Controller.Left() {
 			dir = CounterClockwise
 		}
 		t.tumbleAnimation = NewTumbleAnimation(dir, t.pos.Y)
@@ -252,7 +252,7 @@ func (t *Todd) AccelX(a float64) {
 func (t *Todd) AccelY(a float64) {
 	t.vel.Y = t.vel.Y + a
 	maxVel := TerminalVelocity
-	if World.Controller.Jump() {
+	if Controller.Jump() {
 		maxVel = JumpTerminalVelocity
 	}
 	if t.vel.Y < maxVel {
@@ -265,7 +265,7 @@ func (t *Todd) AdjustBearing(a float64) {
 }
 
 func (t *Todd) Jump() {
-	World.JumpState = JumpStateJumping
+	JumpState = JumpStateJumping
 	t.initialJumpSpeed = math.Abs(t.vel.X)
 	t.vel.Y = GetJumpImpulse(t.initialJumpSpeed)
 	t.vSquishVel = MaxSquishVel
