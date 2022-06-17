@@ -50,13 +50,6 @@ func (t *Todd) String() string {
 	return fmt.Sprintf("Todd pos %v vel %v)", t.pos, t.vel)
 }
 
-func (t *Todd) Gravity() float64 {
-	if t.vel.Y > 0 && World.JumpState == JumpStateJumping {
-		return Gravity * JumpStateGravityFactor
-	}
-	return Gravity
-}
-
 func (t *Todd) Update(s *engine.UpdateState) {
 	dt := s.DeltaSeconds
 
@@ -85,13 +78,18 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		}
 	}
 
-	if t.rnd.Float64() < 0.001 {
+	if t.rnd.Float64() < BlinkOdds {
 		t.Blink()
 	}
 
 	wantJump := World.Controller.Jump()
 
-	t.AccelY(t.Gravity() * dt)
+	gravity := Gravity
+	if t.vel.Y > 0 && wantJump {
+		gravity *= JumpStateGravityFactor
+	}
+
+	t.AccelY(gravity * dt)
 	if t.IsInContactWithGround() {
 		if wantJump && World.JumpState == JumpStateIdle {
 			t.Jump()
@@ -118,7 +116,7 @@ func (t *Todd) Update(s *engine.UpdateState) {
 		t.pos.Y = 0
 	} else {
 		margin := PlatformMargin(t.vel.X)
-		for _, plat := range World.Platforms {
+		for _, plat := range Platforms {
 			if currentY >= plat.bounds.Top() && t.pos.Y <= plat.bounds.Top() &&
 				t.Right() >= plat.bounds.Left()+margin &&
 				t.Left() <= plat.bounds.Right()-margin {
@@ -202,10 +200,10 @@ func (t *Todd) Draw(img *ebiten.Image, g *engine.Graphics) {
 	ysquish := t.vSquish * 1.6
 
 	g.Push()
-	g.Translate(x, y)
 	if t.tumbleAnimation != nil {
 		g.RotateAround(t.tumbleAnimation.AngleFor(y), engine.Vec(0, half))
 	}
+	g.Translate(x, y)
 	width := s - xsquish
 	height := s + ysquish
 	g.SetColor(t.fillColor)
@@ -239,7 +237,7 @@ func (t *Todd) Draw(img *ebiten.Image, g *engine.Graphics) {
 		lidTop := eyePos.Y + 6
 		lidBottom := lidTop - 12*math.Sin(math.Pi*blinkCycle)
 		g.SetColor(t.fillColor)
-		g.DrawRect(img, engine.NewRect(-half+3, lidBottom, half-3, lidTop))
+		g.DrawRect(img, engine.NewRect(-half+1, lidBottom, half-1, lidTop))
 	}
 
 	g.Pop()
@@ -304,7 +302,7 @@ func (t *Todd) GetContactHeight() float64 {
 		return -1
 	}
 	margin := PlatformMargin(t.vel.X)
-	for _, plat := range World.Platforms {
+	for _, plat := range Platforms {
 		if t.pos.Y >= plat.bounds.Bottom() &&
 			t.pos.Y <= plat.bounds.Top() &&
 			t.Right() >= plat.bounds.Left()+margin &&

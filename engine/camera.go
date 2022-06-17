@@ -68,6 +68,11 @@ func (c *Camera) Bottom() float64 {
 	return c.worldRect.Bottom()
 }
 
+func (c *Camera) CenterHorizontalOn(x float64) {
+	cur := c.worldRect.Center()
+	c.Pan(x-cur.X, 0)
+}
+
 // Pan moves the camera by the given amount.
 func (c *Camera) Pan(x, y float64) {
 	c.worldRect.AddToSelf(&Vec2{x, y})
