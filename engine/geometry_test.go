@@ -34,7 +34,7 @@ func TestScale(t *testing.T) {
 func TestTranslation(t *testing.T) {
 	for _, p := range []*Vec2{{0, 0}, {1, 2}, {2, 1}, {0, 0}, {4.1, 1.4}} {
 		for _, v := range []*Vec2{{0, 0}, {1, 2}, {2, 1}, {-1, -1.5}} {
-			m := Translation(v)
+			m := Translation(v.X, v.Y)
 			want := Vec2{v.X + p.X, v.Y + p.Y}
 			got := *m.TransformVec2(p)
 			if got != want {
@@ -85,7 +85,7 @@ type labeledAffine struct {
 
 var transforms = []interface{}{
 	labeledAffine{"identity", Identity()},
-	labeledAffine{"translate(1, 2)", Translation(&Vec2{1, 2})},
+	labeledAffine{"translate(1, 2)", Translation(1, 2)},
 	labeledAffine{"scale(3, 4)", Scale(&Vec2{3, 4})},
 	labeledAffine{"rotate(-π/2)", Rotation(-math.Pi / 2)},
 }
