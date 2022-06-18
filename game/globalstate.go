@@ -2,7 +2,8 @@ package game
 
 import (
 	"context"
-	"fmt"
+	"image/color"
+	"math/rand"
 	"time"
 
 	"github.com/jdf/todd-again/engine"
@@ -19,6 +20,7 @@ var (
 	Bus         *bus.Bus
 	Controller  engine.Controller
 	Camera      *engine.Camera
+	Todd        *Dude
 	WorldBounds = engine.NewRect(-1000, 0, 1000, 200)
 	JumpState   JumpStateType
 )
@@ -38,12 +40,19 @@ func init() {
 
 	Bus.RegisterHandler(CameraVerticalLevelChangedHandlerKey, bus.Handler{
 		Handle: func(ctx context.Context, e bus.Event) {
-			fmt.Printf("boop %v", e.Data)
+			AnimateCameraVertical()
 		},
 		Matcher: ToddVerticalLevelChanged,
 	})
 
 	Controller = engine.EbitenController{}
+
+	Todd = &Dude{
+		sideLength: ToddSideLength,
+		fillColor:  color.RGBA{R: 233, G: 180, B: 30, A: 255},
+		pos:        engine.Vec2{X: 0, Y: 0},
+		rnd:        rand.New(rand.NewSource(time.Now().UnixNano())),
+	}
 }
 
 type JumpStateType int

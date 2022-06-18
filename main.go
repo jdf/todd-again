@@ -25,5 +25,5 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	engine.RunGameLoop(game.Level1(), 800, 450, "Todd Again")
+	engine.RunGameLoop(game.ToddGame{}, 800, 800, "Todd Again")
 }

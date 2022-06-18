@@ -11,11 +11,11 @@ import (
 	"github.com/jdf/todd-again/engine"
 )
 
-const debugTodd = true
+const debugTodd = false
 
 var debugColor = color.RGBA{0, 255, 0, 255}
 
-type Todd struct {
+type Dude struct {
 	sideLength float64
 	fillColor  color.Color
 	// Todd's bottom-center.
@@ -47,11 +47,11 @@ type Todd struct {
 	rnd *rand.Rand
 }
 
-func (t *Todd) String() string {
+func (t *Dude) String() string {
 	return fmt.Sprintf("Todd pos %v vel %v)", t.pos, t.vel)
 }
 
-func (t *Todd) Update(s *engine.UpdateState) {
+func (t *Dude) Update(s *engine.UpdateState) {
 	dt := s.DeltaSeconds
 
 	accel := Accel
@@ -150,8 +150,9 @@ func (t *Todd) Update(s *engine.UpdateState) {
 	} else if !colliding {
 		JumpState = JumpStateJumping // we fell off a platform
 		// Squish, but, if already squishing, squish in that direction.
-		if MaxSquishVel > math.Abs(t.vSquishVel) {
-			t.vSquishVel = math.Copysign(MaxSquishVel, t.vSquishVel)
+		const FallingSquishVel = .5 * MaxSquishVel
+		if FallingSquishVel > math.Abs(t.vSquishVel) {
+			t.vSquishVel = math.Copysign(FallingSquishVel, t.vSquishVel)
 		}
 		dir := Clockwise
 		if t.vel.X < 0 || Controller.Left() {
@@ -169,7 +170,7 @@ func (t *Todd) Update(s *engine.UpdateState) {
 	} else {
 		// squish stiffness
 		const k = 100.0
-		const damping = 7.5 //8.5
+		const damping = 8.0 //8.5
 
 		squishForce := -k * t.vSquish
 		dampingForce := damping * t.vSquishVel
@@ -187,13 +188,13 @@ func (t *Todd) Update(s *engine.UpdateState) {
 	}
 }
 
-func (t *Todd) Blink() {
+func (t *Dude) Blink() {
 	if t.blinkCumulativeTime == -1 {
 		t.blinkCumulativeTime = 0
 	}
 }
 
-func (t *Todd) Draw(img *ebiten.Image, g *engine.Graphics) {
+func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 	x, y := t.pos.X, t.pos.Y
 	s := t.sideLength
 	half := s / 2.0
@@ -245,11 +246,11 @@ func (t *Todd) Draw(img *ebiten.Image, g *engine.Graphics) {
 	g.Pop()
 }
 
-func (t *Todd) AccelX(a float64) {
+func (t *Dude) AccelX(a float64) {
 	t.vel.X = Clamp(t.vel.X+a, -Maxvel, Maxvel)
 }
 
-func (t *Todd) AccelY(a float64) {
+func (t *Dude) AccelY(a float64) {
 	t.vel.Y = t.vel.Y + a
 	maxVel := TerminalVelocity
 	if Controller.Jump() {
@@ -260,42 +261,42 @@ func (t *Todd) AccelY(a float64) {
 	}
 }
 
-func (t *Todd) AdjustBearing(a float64) {
+func (t *Dude) AdjustBearing(a float64) {
 	t.bearing = Clamp(t.bearing+a, -Maxvel, Maxvel)
 }
 
-func (t *Todd) Jump() {
+func (t *Dude) Jump() {
 	JumpState = JumpStateJumping
 	t.initialJumpSpeed = math.Abs(t.vel.X)
 	t.vel.Y = GetJumpImpulse(t.initialJumpSpeed)
 	t.vSquishVel = MaxSquishVel
 }
 
-func (t *Todd) ApplyFriction() {
+func (t *Dude) ApplyFriction() {
 	t.vel.X *= Friction
 	if math.Abs(t.vel.X) < .01 {
 		t.vel.X = 0
 	}
 }
 
-func (t *Todd) ApplyBearingFriction() {
+func (t *Dude) ApplyBearingFriction() {
 	t.bearing *= BearingFriction
 }
 
-func (t *Todd) Left() float64 {
+func (t *Dude) Left() float64 {
 	return t.pos.X - t.sideLength/2
 }
 
-func (t *Todd) Right() float64 {
+func (t *Dude) Right() float64 {
 	return t.pos.X + t.sideLength/2
 }
 
-func (t *Todd) IsInContactWithGround() bool {
+func (t *Dude) IsInContactWithGround() bool {
 	return t.GetContactHeight() != -1
 }
 
 // Y value of surface top or -1 for not landing.
-func (t *Todd) GetContactHeight() float64 {
+func (t *Dude) GetContactHeight() float64 {
 	if t.pos.Y <= 0 {
 		return 0
 	}

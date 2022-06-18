@@ -1,48 +1,63 @@
 package game
 
 import (
-	"image/color"
-	"math/rand"
-	"time"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
+	"github.com/tanema/gween"
 )
 
-type ToddGame struct {
-	todd *Todd
-}
+var (
+	CameraVerticalAnimation *gween.Tween
+)
 
-func (level *ToddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
+const DebugWorld = true
+
+type ToddGame struct{}
+
+func (ToddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 	ctx.SetWorldToScreen(Camera.GetTransform())
 	for _, plat := range Platforms {
 		plat.Draw(img, ctx)
 	}
-	level.todd.Draw(img, ctx)
+	Todd.Draw(img, ctx)
 }
 
-func (level *ToddGame) Resize(w, h int) {
+func (ToddGame) Resize(w, h int) {
 	ar := float64(w) / float64(h)
 	Camera = engine.NewCamera(
-		engine.NewRect(-200, 0, 200, 400.0/ar),
+		engine.NewRect(-200, -10, 200, 400.0/ar-10),
 		engine.NewRect(0, 0, w, h),
 		engine.FlipYAxis)
-	Camera.CenterHorizontalOn(level.todd.pos.X)
+	Camera.SetCenterX(Todd.pos.X)
 }
 
-func (level *ToddGame) Update(s *engine.UpdateState) {
-	level.todd.Update(s)
-	Camera.CenterHorizontalOn(level.todd.pos.X)
-}
-
-func Level1() *ToddGame {
-	level := &ToddGame{
-		todd: &Todd{
-			sideLength: ToddSideLength,
-			fillColor:  color.RGBA{R: 233, G: 180, B: 30, A: 255},
-			pos:        engine.Vec2{X: 0, Y: 0},
-			rnd:        rand.New(rand.NewSource(time.Now().UnixNano())),
-		},
+func AnimateCameraVertical() {
+	b := Camera.WorldBounds()
+	var target float64
+	if Todd.pos.Y < 200 {
+		target = -10
+	} else {
+		target = Todd.pos.Y - 20 - b.Height()/2
 	}
-	return level
+	CameraVerticalAnimation = gween.New(
+		float32(b.Bottom()), float32(target), CameraTiltSeconds, CameraTiltEasing)
+}
+
+func ControlCamera(s *engine.UpdateState) {
+	Camera.SetCenterX(Todd.pos.X)
+	if CameraVerticalAnimation != nil {
+		y, done := CameraVerticalAnimation.Update(float32(s.DeltaSeconds))
+		Camera.RelativelyPositionY(float64(y), 0)
+		if done {
+			CameraVerticalAnimation = nil
+		}
+	}
+	if Camera.Bottom() > Todd.pos.Y-10 {
+		Camera.RelativelyPositionY(Todd.pos.Y-10, 0)
+	}
+}
+
+func (ToddGame) Update(s *engine.UpdateState) {
+	Todd.Update(s)
+	ControlCamera(s)
 }
