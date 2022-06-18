@@ -1,6 +1,7 @@
 package game
 
 import (
+	"context"
 	"fmt"
 	"math"
 )
@@ -46,6 +47,7 @@ func (t *TumbleAnimation) AngleFor(height float64) float64 {
 		t.startHeight = t.targetHeight
 		t.targetHeight = nextTumbleHeight(t.startHeight)
 		t.startAngle += (math.Pi / 2.0) * float64(t.sign)
+		Bus.Emit(context.Background(), ToddVerticalLevelChanged, t.targetHeight)
 	}
 
 	totalDelta := t.targetHeight - t.startHeight

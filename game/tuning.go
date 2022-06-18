@@ -41,7 +41,7 @@ const EyeCenteringDurationSeconds = 0.25
 
 const JumpStateGravityFactor = 0.55
 
-const CameraTiltSeconds = 0.5
+const CameraTiltSeconds = 0.2
 
 var CameraTiltEasing = ease.Linear
 
