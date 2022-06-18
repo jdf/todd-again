@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"errors"
 	"fmt"
 	"image/color"
 	"log"
@@ -57,10 +56,6 @@ type ebitenGame struct {
 // update into multiple physics ticks.
 func (game *ebitenGame) Update() error {
 	input := GetInputState()
-
-	if input.Q {
-		return errors.New("Quit")
-	}
 
 	now := time.Now()
 	dt := now.Sub(game.lastEbitenUpdate)
