@@ -89,6 +89,7 @@ func drawDebugInfo(img *ebiten.Image, game *ebitenGame) {
 
 // Draw draws the game screen in ebiten.
 func (game *ebitenGame) Draw(screen *ebiten.Image) {
+	screen.Fill(color.Black)
 	game.userGame.Draw(screen, game.gfx)
 
 	if debug {
