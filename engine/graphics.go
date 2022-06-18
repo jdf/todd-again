@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -70,6 +71,21 @@ func (g *Graphics) RotateAround(angle float64, center *Vec2) {
 	g.cachedObjectToScreen = nil
 }
 
+// ToPixel transforms a point in object space to a point in pixel space,
+// rounding to the nearest integer.
+func (g *Graphics) ToPixel(xWorld, yWorld float64) (float64, float64) {
+	xScreen, yScreen := g.ObjectToScreen().Transform(xWorld, yWorld)
+	return math.Round(xScreen), math.Round(yScreen)
+}
+
+// ToPixel transforms a point in object space to a point in pixel space,
+// rounding to the nearest integer.
+func (g *Graphics) ToPixelRect(r *Rect) *Rect {
+	minX, minY := g.ToPixel(r.Left(), r.Bottom())
+	maxX, maxY := g.ToPixel(r.Right(), r.Top())
+	return NewRect(minX, minY, maxX, maxY)
+}
+
 func (g *Graphics) ObjectToScreen() *Affine {
 	if g.cachedObjectToScreen == nil {
 		g.cachedObjectToScreen = Compose(&g.objectToWorld, g.worldToScreen)
@@ -113,15 +129,15 @@ func (g *Graphics) fillPath(img *ebiten.Image, p *vector.Path) {
 // DrawLine draws a line from x1,y1 to x2,y2 in object space.
 func (g *Graphics) DrawLine(img *ebiten.Image, x1, y1, x2, y2 float64) {
 	path := &vector.Path{}
-	x1, y1 = g.ObjectToScreen().Transform(x1, y1)
-	x2, y2 = g.ObjectToScreen().Transform(x2, y2)
+	x1, y1 = g.ToPixel(x1, y1)
+	x2, y2 = g.ToPixel(x2, y2)
 	path.MoveTo(float32(x1), float32(y1))
 	path.LineTo(float32(x2), float32(y2))
 	g.fillPath(img, path)
 }
 
 func (g *Graphics) DrawRect(img *ebiten.Image, r *Rect) {
-	sr := g.ObjectToScreen().TransformRect(r)
+	sr := g.ToPixelRect(r)
 	path := &vector.Path{}
 	minx, miny, maxx, maxy := float32(sr.Min.X), float32(sr.Min.Y), float32(sr.Max.X), float32(sr.Max.Y)
 	path.MoveTo(minx, miny)
@@ -161,27 +177,29 @@ func (g *Graphics) appendEllipticalArc(p *vector.Path, center, radii *Vec2, star
 		cx := 2*x1 - x0/2 - x2/2
 		cy := 2*y1 - y0/2 - y2/2
 
-		x0, y0 = g.ObjectToScreen().Transform(x0, y0)
-		cx, cy = g.ObjectToScreen().Transform(cx, cy)
-		x2, y2 = g.ObjectToScreen().Transform(x2, y2)
+		x0, y0 = g.ToPixel(x0, y0)
+		cx, cy = g.ToPixel(cx, cy)
+		x2, y2 = g.ToPixel(x2, y2)
 
 		if i == 0 {
 			if mode == PathModeContinue {
-				//fmt.Printf("LineTo(%v, %v)\n", x0, y0)
 				p.LineTo(float32(x0), float32(y0))
 			} else {
-				//fmt.Printf("MoveTo(%v, %v)\n", x0, y0)
 				p.MoveTo(float32(x0), float32(y0))
 			}
 		}
-		//fmt.Printf("QuadraticTo(%v, %v)\n", x2, y2)
 		p.QuadTo(float32(cx), float32(cy), float32(x2), float32(y2))
 	}
 }
 
 var kCornerAngles = []float64{1.5 * math.Pi, math.Pi, .5 * math.Pi, 0, -.5 * math.Pi}
 
+var DebugRoundRect = false
+
 func (g *Graphics) DrawRoundedRect(img *ebiten.Image, r *Rect, radius float64) {
+	if DebugRoundRect {
+		fmt.Println(g.ObjectToScreen().TransformRect(r).Max.X)
+	}
 	path := &vector.Path{}
 	maxRadius := math.Min(.5*r.Width(), .5*r.Height())
 	actualRadius := math.Min(radius, maxRadius)

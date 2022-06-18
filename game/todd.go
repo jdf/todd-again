@@ -274,7 +274,7 @@ func (t *Dude) Jump() {
 
 func (t *Dude) ApplyFriction() {
 	t.vel.X *= Friction
-	if math.Abs(t.vel.X) < .01 {
+	if math.Abs(t.vel.X) < 1 {
 		t.vel.X = 0
 	}
 }
