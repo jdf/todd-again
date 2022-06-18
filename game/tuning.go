@@ -1,6 +1,10 @@
 package game
 
-import "math"
+import (
+	"math"
+
+	"github.com/tanema/gween/ease"
+)
 
 // bg color
 const BG = 0
@@ -22,7 +26,7 @@ const AirBending = 575.0
 const BearingAccel = 1200.0
 const JumpImpulse = 350.0
 
-const MaxSquishVel = 80.0
+const MaxSquishVel = 60.0
 
 // Max vertical velocity while holding down jump.
 const JumpTerminalVelocity = -350.0
@@ -36,6 +40,10 @@ const BlinkCycleSeconds = 0.25
 const EyeCenteringDurationSeconds = 0.25
 
 const JumpStateGravityFactor = 0.55
+
+const CameraTiltSeconds = 0.5
+
+var CameraTiltEasing = ease.Linear
 
 const (
 	Step1 = Maxvel * .333

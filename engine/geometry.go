@@ -180,6 +180,12 @@ func (r *Rect) Inset(delta *Vec2) *Rect {
 	}
 }
 
+func (r *Rect) SetBottomPreservingSize(bottom float64) {
+	delta := r.Min.Y - bottom
+	r.Min.Y -= delta
+	r.Max.Y -= delta
+}
+
 // Corners returns the four corners of this Rect from left-bottom counterclockwise.
 func (r *Rect) Corners() [4]Vec2 {
 	return [4]Vec2{

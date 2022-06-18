@@ -48,6 +48,10 @@ func NewCamera(worldRect *Rect, screenRect *Rect, yAxisPolicy YAxisPolicy) *Came
 	}
 }
 
+func (c *Camera) WorldBounds() *Rect {
+	return c.worldRect.Copy()
+}
+
 // Left returns the left edge of the world rectangle.
 func (c *Camera) Left() float64 {
 	return c.worldRect.Left()
@@ -68,9 +72,20 @@ func (c *Camera) Bottom() float64 {
 	return c.worldRect.Bottom()
 }
 
-func (c *Camera) CenterHorizontalOn(x float64) {
+func (c *Camera) SetCenterX(x float64) {
 	cur := c.worldRect.Center()
 	c.Pan(x-cur.X, 0)
+}
+
+func (c *Camera) SetCenterY(y float64) {
+	cur := c.worldRect.Center()
+	c.Pan(0, y-cur.Y)
+}
+
+func (c *Camera) RelativelyPositionY(worldY, cameraY float64) {
+	newBottom := worldY - cameraY
+	c.worldRect.SetBottomPreservingSize(newBottom)
+	c.invalidate()
 }
 
 // Pan moves the camera by the given amount.
