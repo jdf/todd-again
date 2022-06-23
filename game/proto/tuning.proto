@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package game;
+
+option go_package = "github.com/jdf/todd-again/game/proto";
+
+message Color {
+  // all values [0,1]
+  optional float red = 1;
+  optional float green = 2;
+  optional float blue = 3;
+  optional float alpha = 4;
+}
+
+message Tuning {
+  optional Color bg = 1 [ default = {0, 0, 0, 1} ];
+  optional float todd_side_length = 2 [ default = 30.0 ];
+
+  // A unitless constant that we apply to velocity while on the ground.
+  optional float friction = 3 [ default = 0.97 ];
+
+  // A unitless constant that we apply to bearing when not accelerating.
+  optional float bearing_friction = 4 [ default = 0.95 ];
+
+  optional float gravity = 5 [ default = -1200.0 ];
+  optional float max_velocity = 6 [ default = 240.0 ];
+  optional float acceleration = 7 [ default = 900.0 ];
+  optional float air_bending = 8 [ default = 575.0 ];
+  optional float bearing_acceleration = 9 [ default = 1200.0 ];
+  optional float jump_impulse = 10 [ default = 350.0 ];
+}
+
+//     const MaxSquishVel = 60.0
+
+//     // Max vertical velocity while holding down jump.
+//     const JumpTerminalVelocity = -350.0
+// const TerminalVelocity =         -550.0
+
+//         // Blinking.
+//         const BlinkOdds = 1/3000.0
+// const BlinkCycleSeconds = 0.25
+
+//     // Eye centering speed for tumbling/landing.
+//     const EyeCenteringDurationSeconds = 0.25
+
+//     const JumpStateGravityFactor = 0.55
+
+//     const CameraTiltSeconds = 0.2
+
+//     const JumpRequestSlopSeconds = 0.2
+// const GroundingSlopSeconds = 0.2

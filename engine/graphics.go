@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"golang.org/x/image/font"
@@ -128,12 +129,13 @@ func (g *Graphics) fillPath(img *ebiten.Image, p *vector.Path) {
 
 // DrawLine draws a line from x1,y1 to x2,y2 in object space.
 func (g *Graphics) DrawLine(img *ebiten.Image, x1, y1, x2, y2 float64) {
-	path := &vector.Path{}
 	x1, y1 = g.ToPixel(x1, y1)
 	x2, y2 = g.ToPixel(x2, y2)
-	path.MoveTo(float32(x1), float32(y1))
-	path.LineTo(float32(x2), float32(y2))
-	g.fillPath(img, path)
+	ebitenutil.DrawLine(img, x1, y1, x2, y2, g.color)
+	//path := &vector.Path{}
+	//path.MoveTo(float32(x1), float32(y1))
+	//	path.LineTo(float32(x2), float32(y2))
+	//	g.fillPath(img, path)
 }
 
 func (g *Graphics) DrawRect(img *ebiten.Image, r *Rect) {

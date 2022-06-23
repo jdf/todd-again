@@ -1,10 +1,38 @@
-package game
+package tuning
 
 import (
+	"embed"
 	"math"
 
+	"github.com/jdf/todd-again/game/proto"
 	"github.com/tanema/gween/ease"
+	"google.golang.org/protobuf/encoding/prototext"
 )
+
+var (
+	Tuning *proto.Tuning
+
+	//go:embed *.textproto
+	assets embed.FS
+)
+
+func LoadTuning() error {
+	buf, err := assets.ReadFile("tuning.textproto")
+	if err != nil {
+		return err
+	}
+	Tuning = &proto.Tuning{}
+	if err = prototext.Unmarshal(buf, Tuning); err != nil {
+		return err
+	}
+	return nil
+}
+
+func defaults() *Tuning {
+	return &Tuning{
+		Gravity: new(float32),
+	}
+}
 
 // bg color
 const BG = 0
@@ -43,6 +71,9 @@ const JumpStateGravityFactor = 0.55
 
 const CameraTiltSeconds = 0.2
 
+const JumpRequestSlopSeconds = 0.2
+const GroundingSlopSeconds = 0.2
+
 var CameraTiltEasing = ease.Linear
 
 const (
@@ -71,7 +102,7 @@ func GetJumpImpulse(speed float64) float64 {
 
 // The platform has a width differing from its apparent width, depending on
 // your speed. The slower you are, the narrower the platform is.
-var PlatformMargins = []float64{8, 0, -5}
+var PlatformMargins = []float64{-8, 0, 5}
 
 func PlatformMargin(xVel float64) float64 {
 	return PlatformMargins[SpeedStepFunction(xVel)]

@@ -36,7 +36,15 @@ type Platform struct {
 	color  color.Color
 }
 
+const DebugPlatforms = true
+
 func (platform *Platform) Draw(img *ebiten.Image, g *engine.Graphics) {
+	b := platform.bounds
 	g.SetColor(platform.color)
-	g.DrawRoundedRect(img, platform.bounds, 5)
+	g.DrawRoundedRect(img, b, 5)
+	if DebugPlatforms {
+		margin := PlatformMargin(Todd.vel.X)
+		g.SetColor(color.RGBA{0, 255, 0, 255})
+		g.DrawLine(img, b.Left()-margin, b.Top(), b.Right()+margin, b.Top())
+	}
 }

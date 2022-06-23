@@ -13,7 +13,12 @@ import (
 
 const debugTodd = false
 
-var debugColor = color.RGBA{0, 255, 0, 255}
+var (
+	debugColor = color.RGBA{0, 255, 0, 255}
+
+	jumpRequestTimerSeconds   = 0.0
+	groundingSlopTimerSeconds = 0.0
+)
 
 type Dude struct {
 	sideLength float64
@@ -54,8 +59,18 @@ func (t *Dude) String() string {
 func (t *Dude) Update(s *engine.UpdateState) {
 	dt := s.DeltaSeconds
 
+	grounded := t.Grounded()
+
+	if grounded {
+		groundingSlopTimerSeconds = GroundingSlopSeconds
+	} else {
+		groundingSlopTimerSeconds -= dt
+	}
+
+	canJump := groundingSlopTimerSeconds > 0
+
 	accel := Accel
-	if !t.IsInContactWithGround() {
+	if !grounded {
 		accel = AirBending
 	}
 
@@ -67,7 +82,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		t.AccelX(accel * dt)
 	} else {
 		t.ApplyBearingFriction()
-		if t.IsInContactWithGround() {
+		if t.Grounded() {
 			t.ApplyFriction()
 		}
 	}
@@ -83,7 +98,15 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		t.Blink()
 	}
 
-	wantJump := Controller.Jump()
+	if Controller.Jump() {
+		jumpRequestTimerSeconds = JumpRequestSlopSeconds
+	}
+	wantJump := jumpRequestTimerSeconds > 0
+	if wantJump {
+		jumpRequestTimerSeconds = 0
+	} else {
+		jumpRequestTimerSeconds -= dt
+	}
 
 	gravity := Gravity
 	if t.vel.Y > 0 && wantJump {
@@ -91,7 +114,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 	}
 
 	t.AccelY(gravity * dt)
-	if t.IsInContactWithGround() {
+	if canJump {
 		if wantJump && JumpState == JumpStateIdle {
 			t.Jump()
 		} else if !wantJump && JumpState == JumpStateLanded {
@@ -119,8 +142,8 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		margin := PlatformMargin(t.vel.X)
 		for _, plat := range Platforms {
 			if currentY >= plat.bounds.Top() && t.pos.Y <= plat.bounds.Top() &&
-				t.Right() >= plat.bounds.Left()+margin &&
-				t.Left() <= plat.bounds.Right()-margin {
+				t.Right() >= plat.bounds.Left()-margin &&
+				t.Left() <= plat.bounds.Right()+margin {
 				colliding = true
 				t.pos.Y = plat.bounds.Top()
 				break
@@ -291,7 +314,7 @@ func (t *Dude) Right() float64 {
 	return t.pos.X + t.sideLength/2
 }
 
-func (t *Dude) IsInContactWithGround() bool {
+func (t *Dude) Grounded() bool {
 	return t.GetContactHeight() != -1
 }
 
