@@ -3,6 +3,7 @@ package game
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
+	"github.com/jdf/todd-again/game/tuning"
 	"github.com/tanema/gween"
 )
 
@@ -40,7 +41,10 @@ func AnimateCameraVertical() {
 		target = Todd.pos.Y - 20 - b.Height()/2
 	}
 	CameraVerticalAnimation = gween.New(
-		float32(b.Bottom()), float32(target), CameraTiltSeconds, CameraTiltEasing)
+		float32(b.Bottom()),
+		float32(target),
+		float32(tuning.Instance.GetCameraTiltSeconds()),
+		tuning.CameraTiltEasing)
 }
 
 func ControlCamera(s *engine.UpdateState) {

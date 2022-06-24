@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jdf/todd-again/engine"
+	"github.com/jdf/todd-again/game/tuning"
 	"github.com/mustafaturan/bus/v3"
 	"github.com/mustafaturan/monoton/v3"
 	"github.com/mustafaturan/monoton/v3/sequencer"
@@ -48,7 +49,7 @@ func init() {
 	Controller = engine.EbitenController{}
 
 	Todd = &Dude{
-		sideLength: ToddSideLength,
+		sideLength: tuning.Instance.GetToddSideLength(),
 		fillColor:  color.RGBA{R: 233, G: 180, B: 30, A: 255},
 		pos:        engine.Vec2{X: 0, Y: 0},
 		rnd:        rand.New(rand.NewSource(time.Now().UnixNano())),

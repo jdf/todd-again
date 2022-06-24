@@ -9,76 +9,26 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
+func init() {
+	buf, err := assets.ReadFile("tuning.textproto")
+	if err != nil {
+		panic(err)
+	}
+	Instance = &proto.Tuning{}
+	if err = prototext.Unmarshal(buf, Instance); err != nil {
+		panic(err)
+	}
+}
+
 var (
-	Tuning *proto.Tuning
+	Instance *proto.Tuning
 
 	//go:embed *.textproto
 	assets embed.FS
-)
 
-func LoadTuning() error {
-	buf, err := assets.ReadFile("tuning.textproto")
-	if err != nil {
-		return err
-	}
-	Tuning = &proto.Tuning{}
-	if err = prototext.Unmarshal(buf, Tuning); err != nil {
-		return err
-	}
-	return nil
-}
-
-func defaults() *Tuning {
-	return &Tuning{
-		Gravity: new(float32),
-	}
-}
-
-// bg color
-const BG = 0
-
-// length of dude's side
-const ToddSideLength = 30.0
-
-// A unitless constant that we apply to velocity while on the ground.
-const Friction = 0.97
-
-// A unitless constant that we apply to bearing when not accelerating.
-const BearingFriction = 0.95
-
-// The following constants are pixels per second.
-const Gravity = -1200.0
-const Maxvel = 240.0
-const Accel = 900.0
-const AirBending = 575.0
-const BearingAccel = 1200.0
-const JumpImpulse = 350.0
-
-const MaxSquishVel = 60.0
-
-// Max vertical velocity while holding down jump.
-const JumpTerminalVelocity = -350.0
-const TerminalVelocity = -550.0
-
-// Blinking.
-const BlinkOdds = 1 / 3000.0
-const BlinkCycleSeconds = 0.25
-
-// Eye centering speed for tumbling/landing.
-const EyeCenteringDurationSeconds = 0.25
-
-const JumpStateGravityFactor = 0.55
-
-const CameraTiltSeconds = 0.2
-
-const JumpRequestSlopSeconds = 0.2
-const GroundingSlopSeconds = 0.2
-
-var CameraTiltEasing = ease.Linear
-
-const (
-	Step1 = Maxvel * .333
-	Step2 = Maxvel * .666
+	CameraTiltEasing = ease.Linear
+	Step1            = Instance.GetMaxVelocity() * .333
+	Step2            = Instance.GetMaxVelocity() * .666
 )
 
 func SpeedStepFunction(v float64) int {
@@ -97,7 +47,7 @@ func SpeedStepFunction(v float64) int {
 var JumpImpulseFactors = []float64{1, 1, 1.2}
 
 func GetJumpImpulse(speed float64) float64 {
-	return JumpImpulse * JumpImpulseFactors[SpeedStepFunction(speed)]
+	return Instance.GetJumpImpulse() * JumpImpulseFactors[SpeedStepFunction(speed)]
 }
 
 // The platform has a width differing from its apparent width, depending on

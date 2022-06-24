@@ -1,4 +1,4 @@
-syntax = "proto3";
+syntax = "proto2";
 
 package game;
 
@@ -6,46 +6,48 @@ option go_package = "github.com/jdf/todd-again/game/proto";
 
 message Color {
   // all values [0,1]
-  optional float red = 1;
-  optional float green = 2;
-  optional float blue = 3;
-  optional float alpha = 4;
+  optional double red = 1 [ default = 0 ];
+  optional double green = 2 [ default = 0 ];
+  optional double blue = 3 [ default = 0 ];
+  optional double alpha = 4 [ default = 1 ];
 }
 
+// All distances are in world coordinates, all durations are in seconds.
 message Tuning {
-  optional Color bg = 1 [ default = {0, 0, 0, 1} ];
-  optional float todd_side_length = 2 [ default = 30.0 ];
+  optional Color bg = 1;
+  optional double todd_side_length = 2 [ default = 30.0 ];
 
   // A unitless constant that we apply to velocity while on the ground.
-  optional float friction = 3 [ default = 0.97 ];
+  optional double friction = 3 [ default = 0.97 ];
 
   // A unitless constant that we apply to bearing when not accelerating.
-  optional float bearing_friction = 4 [ default = 0.95 ];
+  optional double bearing_friction = 4 [ default = 0.95 ];
 
-  optional float gravity = 5 [ default = -1200.0 ];
-  optional float max_velocity = 6 [ default = 240.0 ];
-  optional float acceleration = 7 [ default = 900.0 ];
-  optional float air_bending = 8 [ default = 575.0 ];
-  optional float bearing_acceleration = 9 [ default = 1200.0 ];
-  optional float jump_impulse = 10 [ default = 350.0 ];
+  optional double gravity = 5 [ default = -1200.0 ];
+
+  optional double max_velocity = 6 [ default = 240.0 ];
+
+  optional double acceleration = 7 [ default = 900.0 ];
+  optional double air_bending = 8 [ default = 575.0 ];
+  optional double bearing_acceleration = 9 [ default = 1200.0 ];
+
+  optional double jump_impulse = 10 [ default = 350.0 ];
+  optional double max_squish_velocity = 11 [ default = 60.0 ];
+
+  // Max vertical velocity while holding down jump.
+  optional double jump_terminal_velocity = 12 [ default = -350.0 ];
+  optional double terminal_velocity = 13 [ default = -550.0 ];
+
+  optional double blink_odds = 14 [ default = 0.0003 ];
+  optional double blink_cycle_seconds = 15 [ default = 0.25 ];
+
+  // Eye centering speed for tumbling/landing.
+  optional double eye_centering_duration_seconds = 16 [ default = 1.0 ];
+
+  optional double jump_state_gravity_factor = 17 [ default = 0.55 ];
+
+  optional double camera_tilt_seconds = 18 [ default = 0.2 ];
+
+  optional double jump_request_slop_seconds = 19 [ default = 0.2 ];
+  optional double grounding_slop_seconds = 20 [ default = 0.2 ];
 }
-
-//     const MaxSquishVel = 60.0
-
-//     // Max vertical velocity while holding down jump.
-//     const JumpTerminalVelocity = -350.0
-// const TerminalVelocity =         -550.0
-
-//         // Blinking.
-//         const BlinkOdds = 1/3000.0
-// const BlinkCycleSeconds = 0.25
-
-//     // Eye centering speed for tumbling/landing.
-//     const EyeCenteringDurationSeconds = 0.25
-
-//     const JumpStateGravityFactor = 0.55
-
-//     const CameraTiltSeconds = 0.2
-
-//     const JumpRequestSlopSeconds = 0.2
-// const GroundingSlopSeconds = 0.2
