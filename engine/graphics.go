@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"math"
 
+	"git.maze.io/go/math32"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
@@ -57,26 +58,26 @@ func (g *Graphics) SetColor(color color.Color) {
 	g.color = color
 }
 
-func (g *Graphics) Translate(x, y float64) {
+func (g *Graphics) Translate(x, y float32) {
 	g.objectToWorld.Append(Translation(x, y))
 	g.cachedObjectToScreen = nil
 }
 
-func (g *Graphics) Rotate(angle float64) {
+func (g *Graphics) Rotate(angle float32) {
 	g.objectToWorld.Append(Rotation(angle))
 	g.cachedObjectToScreen = nil
 }
 
-func (g *Graphics) RotateAround(angle float64, center *Vec2) {
+func (g *Graphics) RotateAround(angle float32, center *Vec2) {
 	g.objectToWorld.Append(RotationAround(angle, center))
 	g.cachedObjectToScreen = nil
 }
 
 // ToPixel transforms a point in object space to a point in pixel space,
 // rounding to the nearest integer.
-func (g *Graphics) ToPixel(xWorld, yWorld float64) (float64, float64) {
+func (g *Graphics) ToPixel(xWorld, yWorld float32) (float64, float64) {
 	xScreen, yScreen := g.ObjectToScreen().Transform(xWorld, yWorld)
-	return math.Round(xScreen), math.Round(yScreen)
+	return math.Round(float64(xScreen)), math.Round(float64(yScreen))
 }
 
 // ToPixel transforms a point in object space to a point in pixel space,
@@ -128,14 +129,10 @@ func (g *Graphics) fillPath(img *ebiten.Image, p *vector.Path) {
 }
 
 // DrawLine draws a line from x1,y1 to x2,y2 in object space.
-func (g *Graphics) DrawLine(img *ebiten.Image, x1, y1, x2, y2 float64) {
-	x1, y1 = g.ToPixel(x1, y1)
-	x2, y2 = g.ToPixel(x2, y2)
-	ebitenutil.DrawLine(img, x1, y1, x2, y2, g.color)
-	//path := &vector.Path{}
-	//path.MoveTo(float32(x1), float32(y1))
-	//	path.LineTo(float32(x2), float32(y2))
-	//	g.fillPath(img, path)
+func (g *Graphics) DrawLine(img *ebiten.Image, x1, y1, x2, y2 float32) {
+	x16, y16 := g.ToPixel(x1, y1)
+	x26, y26 := g.ToPixel(x2, y2)
+	ebitenutil.DrawLine(img, x16, y16, x26, y26, g.color)
 }
 
 func (g *Graphics) DrawRect(img *ebiten.Image, r *Rect) {
@@ -157,54 +154,54 @@ const (
 	PathModeNewShape
 )
 
-func (g *Graphics) appendEllipticalArc(p *vector.Path, center, radii *Vec2, startAngle, endAngle float64, mode PathMode) {
-	angleDelta := math.Abs(math.Atan2(math.Sin(startAngle-endAngle), math.Cos(startAngle-endAngle)))
-	n := int(math.Round(4.0 * angleDelta / (.5 * math.Pi)))
+func (g *Graphics) appendEllipticalArc(p *vector.Path, center, radii *Vec2, startAngle, endAngle float32, mode PathMode) {
+	angleDelta := math32.Abs(math32.Atan2(math32.Sin(startAngle-endAngle), math32.Cos(startAngle-endAngle)))
+	n := int(math.Round(float64(4.0 * angleDelta / (.5 * math.Pi))))
 	if n == 0 {
 		n = 16
 	}
 	x, y := center.X, center.Y
 	rx, ry := radii.X, radii.Y
 	for i := 0; i < n; i++ {
-		p1 := float64(i+0) / float64(n)
-		p2 := float64(i+1) / float64(n)
+		p1 := float32(i+0) / float32(n)
+		p2 := float32(i+1) / float32(n)
 		a1 := startAngle + (endAngle-startAngle)*p1
 		a2 := startAngle + (endAngle-startAngle)*p2
-		x0 := x + rx*math.Cos(a1)
-		y0 := y + ry*math.Sin(a1)
-		x1 := x + rx*math.Cos((a1+a2)/2)
-		y1 := y + ry*math.Sin((a1+a2)/2)
-		x2 := x + rx*math.Cos(a2)
-		y2 := y + ry*math.Sin(a2)
+		x0 := x + rx*math32.Cos(a1)
+		y0 := y + ry*math32.Sin(a1)
+		x1 := x + rx*math32.Cos((a1+a2)/2)
+		y1 := y + ry*math32.Sin((a1+a2)/2)
+		x2 := x + rx*math32.Cos(a2)
+		y2 := y + ry*math32.Sin(a2)
 		cx := 2*x1 - x0/2 - x2/2
 		cy := 2*y1 - y0/2 - y2/2
 
-		x0, y0 = g.ToPixel(x0, y0)
-		cx, cy = g.ToPixel(cx, cy)
-		x2, y2 = g.ToPixel(x2, y2)
+		x0d, y0d := g.ToPixel(x0, y0)
+		cxd, cyd := g.ToPixel(cx, cy)
+		x2d, y2d := g.ToPixel(x2, y2)
 
 		if i == 0 {
 			if mode == PathModeContinue {
-				p.LineTo(float32(x0), float32(y0))
+				p.LineTo(float32(x0d), float32(y0d))
 			} else {
-				p.MoveTo(float32(x0), float32(y0))
+				p.MoveTo(float32(x0d), float32(y0d))
 			}
 		}
-		p.QuadTo(float32(cx), float32(cy), float32(x2), float32(y2))
+		p.QuadTo(float32(cxd), float32(cyd), float32(x2d), float32(y2d))
 	}
 }
 
-var kCornerAngles = []float64{1.5 * math.Pi, math.Pi, .5 * math.Pi, 0, -.5 * math.Pi}
+var kCornerAngles = []float32{1.5 * math.Pi, math.Pi, .5 * math.Pi, 0, -.5 * math.Pi}
 
 var DebugRoundRect = false
 
-func (g *Graphics) DrawRoundedRect(img *ebiten.Image, r *Rect, radius float64) {
+func (g *Graphics) DrawRoundedRect(img *ebiten.Image, r *Rect, radius float32) {
 	if DebugRoundRect {
 		fmt.Println(g.ObjectToScreen().TransformRect(r).Max.X)
 	}
 	path := &vector.Path{}
-	maxRadius := math.Min(.5*r.Width(), .5*r.Height())
-	actualRadius := math.Min(radius, maxRadius)
+	maxRadius := math32.Min(.5*r.Width(), .5*r.Height())
+	actualRadius := math32.Min(radius, maxRadius)
 	radii := Vec(actualRadius, actualRadius)
 	arcCenters := r.Inset(radii).Corners()
 	for i := 0; i < 4; i++ {

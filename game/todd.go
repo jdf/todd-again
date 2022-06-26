@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 
+	"git.maze.io/go/math32"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
 	"github.com/jdf/todd-again/game/tuning"
@@ -17,37 +18,37 @@ const debugTodd = false
 var (
 	debugColor = color.RGBA{0, 255, 0, 255}
 
-	jumpRequestTimerSeconds   = 0.0
-	groundingSlopTimerSeconds = 0.0
+	jumpRequestTimerSeconds   float32 = 0.0
+	groundingSlopTimerSeconds float32 = 0.0
 )
 
 type Dude struct {
-	sideLength float64
+	sideLength float32
 	fillColor  color.Color
 	// Todd's bottom-center.
 	pos engine.Vec2
 	vel engine.Vec2
 
 	// The direction the eye is facing.
-	bearing float64
+	bearing float32
 
 	// Defect in vertical size, world coordinates.
 	// Horizontal gets inverse.
-	vSquish float64
+	vSquish float32
 	// Per second.
-	vSquishVel float64
+	vSquishVel float32
 
-	blinkCumulativeTime float64
+	blinkCumulativeTime float32
 
 	// A quantity >= 0 when jumpState is jumpStateJumping.
 	// Used in calculating gravity during jump.
-	initialJumpSpeed float64
+	initialJumpSpeed float32
 
 	// Tumbling!
 	tumbleAnimation *TumbleAnimation
 	// During tumbling, this animates to 1, which means completely centered.
 	// When tumbling ends, this animates to 0, which means "where it wants to be".
-	eyeCentering          float64
+	eyeCentering          float32
 	eyeCenteringAnimation Animation
 
 	rnd *rand.Rand
@@ -95,7 +96,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		}
 	}
 
-	if t.rnd.Float64() < tuning.Instance.GetBlinkOdds() {
+	if t.rnd.Float32() < tuning.Instance.GetBlinkOdds() {
 		t.Blink()
 	}
 
@@ -123,7 +124,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		}
 	}
 
-	if math.Abs(t.vel.X) > 0 {
+	if math32.Abs(t.vel.X) > 0 {
 		t.pos.X += t.vel.X * dt
 		if t.Right() > WorldBounds.Right() {
 			t.pos.X = WorldBounds.Right() - t.sideLength/2
@@ -179,8 +180,8 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		JumpState = JumpStateJumping // we fell off a platform
 		// Squish, but, if already squishing, squish in that direction.
 		FallingSquishVel := .5 * tuning.Instance.GetMaxSquishVelocity()
-		if FallingSquishVel > math.Abs(t.vSquishVel) {
-			t.vSquishVel = math.Copysign(FallingSquishVel, t.vSquishVel)
+		if FallingSquishVel > math32.Abs(t.vSquishVel) {
+			t.vSquishVel = math32.Copysign(FallingSquishVel, t.vSquishVel)
 		}
 		dir := Clockwise
 		if t.vel.X < 0 || Controller.Left() {
@@ -191,7 +192,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 			1, s.NowSeconds, tuning.Instance.GetEyeCenteringDurationSeconds())
 	}
 
-	if math.Abs(t.vSquishVel+t.vSquish) < 0.01 {
+	if math32.Abs(t.vSquishVel+t.vSquish) < 0.01 {
 		// Squish damping when the energy is below threshold.
 		t.vSquishVel = 0
 		t.vSquish = 0
@@ -246,13 +247,13 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 		g.DrawLine(img, -.5, .5, .5, -.5)
 	}
 
-	speedRatio := math.Abs(t.bearing / tuning.Instance.GetMaxVelocity())
+	speedRatio := math32.Abs(t.bearing / tuning.Instance.GetMaxVelocity())
 	eyeVCenter := half + 4 + t.vSquish
 	eyeOffset := Lerp(0, half-6, speedRatio)
 	pupilOffset := Lerp(0, half-3, speedRatio)
 
-	eyePos := &engine.Vec2{X: math.Copysign(eyeOffset, t.bearing), Y: eyeVCenter}
-	pupilPos := &engine.Vec2{X: math.Copysign(pupilOffset, t.bearing), Y: eyeVCenter}
+	eyePos := &engine.Vec2{X: math32.Copysign(eyeOffset, t.bearing), Y: eyeVCenter}
+	pupilPos := &engine.Vec2{X: math32.Copysign(pupilOffset, t.bearing), Y: eyeVCenter}
 	if t.eyeCentering != 0 {
 		center := &engine.Vec2{X: 0, Y: half}
 		eyePos = LerpVec(eyePos, center, t.eyeCentering)
@@ -266,7 +267,7 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 	if t.blinkCumulativeTime != -1 {
 		blinkCycle := t.blinkCumulativeTime / tuning.Instance.GetBlinkCycleSeconds()
 		lidTop := eyePos.Y + 6
-		lidBottom := lidTop - 12*math.Sin(math.Pi*blinkCycle)
+		lidBottom := lidTop - 12*math32.Sin(math.Pi*blinkCycle)
 		g.SetColor(t.fillColor)
 		g.DrawRect(img, engine.NewRect(-half+1, lidBottom, half-1, lidTop))
 	}
@@ -274,12 +275,12 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 	g.Pop()
 }
 
-func (t *Dude) AccelX(a float64) {
+func (t *Dude) AccelX(a float32) {
 	maxvel := tuning.Instance.GetMaxVelocity()
 	t.vel.X = Clamp(t.vel.X+a, -maxvel, maxvel)
 }
 
-func (t *Dude) AccelY(a float64) {
+func (t *Dude) AccelY(a float32) {
 	t.vel.Y = t.vel.Y + a
 	maxVel := tuning.Instance.GetTerminalVelocity()
 	if Controller.Jump() {
@@ -290,21 +291,21 @@ func (t *Dude) AccelY(a float64) {
 	}
 }
 
-func (t *Dude) AdjustBearing(a float64) {
+func (t *Dude) AdjustBearing(a float32) {
 	maxvel := tuning.Instance.GetMaxVelocity()
 	t.bearing = Clamp(t.bearing+a, -maxvel, maxvel)
 }
 
 func (t *Dude) Jump() {
 	JumpState = JumpStateJumping
-	t.initialJumpSpeed = math.Abs(t.vel.X)
+	t.initialJumpSpeed = math32.Abs(t.vel.X)
 	t.vel.Y = tuning.GetJumpImpulse(t.initialJumpSpeed)
 	t.vSquishVel = tuning.Instance.GetMaxSquishVelocity()
 }
 
 func (t *Dude) ApplyFriction() {
 	t.vel.X *= tuning.Instance.GetFriction()
-	if math.Abs(t.vel.X) < 1 {
+	if math32.Abs(t.vel.X) < 1 {
 		t.vel.X = 0
 	}
 }
@@ -313,11 +314,11 @@ func (t *Dude) ApplyBearingFriction() {
 	t.bearing *= tuning.Instance.GetBearingFriction()
 }
 
-func (t *Dude) Left() float64 {
+func (t *Dude) Left() float32 {
 	return t.pos.X - t.sideLength/2
 }
 
-func (t *Dude) Right() float64 {
+func (t *Dude) Right() float32 {
 	return t.pos.X + t.sideLength/2
 }
 
@@ -326,7 +327,7 @@ func (t *Dude) Grounded() bool {
 }
 
 // Y value of surface top or -1 for not landing.
-func (t *Dude) GetContactHeight() float64 {
+func (t *Dude) GetContactHeight() float32 {
 	if t.pos.Y <= 0 {
 		return 0
 	}

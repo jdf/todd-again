@@ -2,7 +2,6 @@ package tuning
 
 import (
 	_ "embed"
-	"fmt"
 
 	"github.com/gabstv/ebiten-imgui/renderer"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -23,15 +22,8 @@ func NewUI() *UI {
 
 func (ui *UI) Resize(w, h int) {
 	ui.mgr.SetDisplaySize(float32(w), float32(h))
-	imgui.CurrentIO().SetFontGlobalScale(3.0)
+	imgui.CurrentIO().SetFontGlobalScale(2.0)
 }
-
-var (
-	counter   = 0
-	floatVal  = float32(0.3)
-	name      = "Todd"
-	someColor = [3]float32{0.3, 0.3, 0.3}
-)
 
 func (ui *UI) UpdatePhysics(s *engine.UpdateState) {}
 
@@ -42,23 +34,14 @@ func (ui *UI) UpdateInput(s *engine.UpdateState) {
 	ui.mgr.Update(float32(s.DeltaSeconds))
 	ui.mgr.BeginFrame()
 	{
-		imgui.Text("ภาษาไทย测试조선말")                      // To display these, you'll need to register a compatible font
-		imgui.Text("Hello, world!")                     // Display some text
-		imgui.SliderFloat("float", &floatVal, 0.0, 1.0) // Edit 1 float using a slider from 0.0f to 1.0f
-		imgui.ColorEdit3("clear color", &someColor)     // Edit 3 floats representing a color
-
-		//imgui.Checkbox("Demo Window", &showDemoWindow) // Edit bools storing our window open/close state
-		//imgui.Checkbox("Go Demo Window", &showGoDemoWindow)
-		//imgui.Checkbox("Another Window", &showAnotherWindow)
-
-		if imgui.Button("Button") { // Buttons return true when clicked (most widgets return true when edited/activated)
-			counter++
+		imgui.CollapsingHeader("World Physics")
+		if Instance.Gravity == nil {
+			g := Instance.GetGravity()
+			Instance.Gravity = &g
 		}
-		imgui.SameLine()
-		imgui.Text(fmt.Sprintf("counter = %d", counter))
-
-		imgui.InputText("Name", &name)
-		imgui.Spacing()
+		imgui.SliderFloat("Gravity", Instance.Gravity, -5000, 0)
+		imgui.Dummy(imgui.Vec2{X: 0, Y: 60})
+		imgui.SameLineV(0, imgui.ContentRegionAvail().X*.666)
 		if imgui.Button("Hide") {
 			ui.Showing = false
 		}

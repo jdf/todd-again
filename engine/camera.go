@@ -23,7 +23,7 @@ type Camera struct {
 	screenToWorld *Affine
 
 	// hack to limit zoom
-	zoom float64
+	zoom float32
 }
 
 // Copy returns a deep copy of the camera.
@@ -53,54 +53,54 @@ func (c *Camera) WorldBounds() *Rect {
 }
 
 // Left returns the left edge of the world rectangle.
-func (c *Camera) Left() float64 {
+func (c *Camera) Left() float32 {
 	return c.worldRect.Left()
 }
 
 // Right returns the right edge of the world rectangle.
-func (c *Camera) Right() float64 {
+func (c *Camera) Right() float32 {
 	return c.worldRect.Right()
 }
 
 // Top returns the top edge of the world rectangle.
-func (c *Camera) Top() float64 {
+func (c *Camera) Top() float32 {
 	return c.worldRect.Top()
 }
 
 // Bottom returns the bottom edge of the world rectangle.
-func (c *Camera) Bottom() float64 {
+func (c *Camera) Bottom() float32 {
 	return c.worldRect.Bottom()
 }
 
-func (c *Camera) SetCenterX(x float64) {
+func (c *Camera) SetCenterX(x float32) {
 	cur := c.worldRect.Center()
 	c.Pan(x-cur.X, 0)
 }
 
-func (c *Camera) SetCenterY(y float64) {
+func (c *Camera) SetCenterY(y float32) {
 	cur := c.worldRect.Center()
 	c.Pan(0, y-cur.Y)
 }
 
-func (c *Camera) RelativelyPositionY(worldY, cameraY float64) {
+func (c *Camera) RelativelyPositionY(worldY, cameraY float32) {
 	newBottom := worldY - cameraY
 	c.worldRect.SetBottomPreservingSize(newBottom)
 	c.invalidate()
 }
 
 // Pan moves the camera by the given amount.
-func (c *Camera) Pan(x, y float64) {
+func (c *Camera) Pan(x, y float32) {
 	c.worldRect.AddToSelf(&Vec2{x, y})
 	c.invalidate()
 }
 
 // Zoom scales the camera by the given factor, keeping the center of the camera fixed.
-func (c *Camera) Zoom(factor float64) {
+func (c *Camera) Zoom(factor float32) {
 	c.ZoomInto(factor, c.worldRect.Center())
 }
 
 // ZoomInto scales the camera by the given factor, keeping the given point fixed.
-func (c *Camera) ZoomInto(factor float64, center *Vec2) {
+func (c *Camera) ZoomInto(factor float32, center *Vec2) {
 	newZoom := c.zoom * factor
 	if newZoom < 0.1 || newZoom > 10 {
 		return
@@ -162,7 +162,7 @@ func (c *Camera) ToScreenVec2(worldPos *Vec2) *Vec2 {
 }
 
 // ToScreen converts a point in world space to a point in display space.
-func (c *Camera) ToScreen(x, y float64) (float64, float64) {
+func (c *Camera) ToScreen(x, y float32) (float32, float32) {
 	return c.GetTransform().Transform(x, y)
 }
 
@@ -177,7 +177,7 @@ func (c *Camera) ToWorldVec2(displayPos *Vec2) *Vec2 {
 }
 
 // ToWorld converts a point in display space to a point in world space.
-func (c *Camera) ToWorld(x, y float64) (float64, float64) {
+func (c *Camera) ToWorld(x, y float32) (float32, float32) {
 	return c.getInverseTransform().Transform(x, y)
 }
 
@@ -189,11 +189,11 @@ func (c *Camera) ToWorldRect(rect *Rect) *Rect {
 // Generic funcs to transform arbitrary numeric types.
 
 // ScreenToWorld converts a point in display space to a point in world space.
-func ScreenToWorld[T Numeric](c *Camera, x, y T) (float64, float64) {
-	return c.ToWorld(float64(x), float64(y))
+func ScreenToWorld[T Numeric](c *Camera, x, y T) (float32, float32) {
+	return c.ToWorld(float32(x), float32(y))
 }
 
 // WorldToScreen converts a point in world space to a point in display space.
-func WorldToScreen[T Numeric](c *Camera, x, y T) (float64, float64) {
-	return c.ToScreen(float64(x), float64(y))
+func WorldToScreen[T Numeric](c *Camera, x, y T) (float32, float32) {
+	return c.ToScreen(float32(x), float32(y))
 }

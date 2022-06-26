@@ -47,7 +47,7 @@ func TestTranslation(t *testing.T) {
 func TestRotation(t *testing.T) {
 	type tc struct {
 		p     Vec2
-		angle float64
+		angle float32
 		want  Vec2
 	}
 	for _, tt := range []tc{
@@ -66,7 +66,7 @@ func TestRotation(t *testing.T) {
 	}
 }
 
-func snapTenth(f float64) float64 {
+func snapTenth(f float32) float32 {
 	return math.Round(f*10) / 10
 }
 
@@ -208,7 +208,7 @@ func TestNewRectFromCorners(t *testing.T) {
 
 func TestNewRect(t *testing.T) {
 	want := &Rect{Vec2{0, 0}, Vec2{1, 1}}
-	for _, tt := range [][4]float64{
+	for _, tt := range [][4]float32{
 		{0, 0, 1, 1},
 		{0, 1, 1, 0},
 		{1, 0, 0, 1},

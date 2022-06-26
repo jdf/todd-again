@@ -15,7 +15,7 @@ type InputState struct {
 	Spacebar, Enter, Escape bool
 	MouseLeft, MouseRight   bool
 	MouseX, MouseY          int
-	WheelX, WheelY          float64
+	WheelX, WheelY          float32
 }
 
 func GetInputState() *InputState {
@@ -41,7 +41,8 @@ func GetInputState() *InputState {
 		state.MouseRight = ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight)
 	}
 	if WantMouseWheel {
-		state.WheelX, state.WheelY = ebiten.Wheel()
+		x, y := ebiten.Wheel()
+		state.WheelX, state.WheelY = float32(x), float32(y)
 	}
 	state.MouseX, state.MouseY = ebiten.CursorPosition()
 	return state

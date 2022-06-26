@@ -35,7 +35,7 @@ func (g *toddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 }
 
 func (g *toddGame) Resize(w, h int) {
-	ar := float64(w) / float64(h)
+	ar := float32(w) / float32(h)
 	Camera = engine.NewCamera(
 		engine.NewRect(-200, -10, 200, 400.0/ar-10),
 		engine.NewRect(0, 0, w, h),
@@ -46,7 +46,7 @@ func (g *toddGame) Resize(w, h int) {
 
 func AnimateCameraVertical() {
 	b := Camera.WorldBounds()
-	var target float64
+	var target float32
 	if Todd.pos.Y < 200 {
 		target = -10
 	} else {
@@ -63,7 +63,7 @@ func ControlCamera(s *engine.UpdateState) {
 	Camera.SetCenterX(Todd.pos.X)
 	if CameraVerticalAnimation != nil {
 		y, done := CameraVerticalAnimation.Update(float32(s.DeltaSeconds))
-		Camera.RelativelyPositionY(float64(y), 0)
+		Camera.RelativelyPositionY(float32(y), 0)
 		if done {
 			CameraVerticalAnimation = nil
 		}

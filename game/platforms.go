@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	TumbleLevels []float64
+	TumbleLevels []float32
 
 	Platforms = []Platform{
 		{engine.NewRect(100, 110, 250, 130), color.RGBA{190, 190, 255, 255}},
@@ -37,7 +37,7 @@ type Platform struct {
 	color  color.Color
 }
 
-const DebugPlatforms = true
+const DebugPlatforms = false
 
 func (platform *Platform) Draw(img *ebiten.Image, g *engine.Graphics) {
 	b := platform.bounds

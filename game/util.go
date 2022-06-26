@@ -4,7 +4,7 @@ import (
 	"github.com/jdf/todd-again/engine"
 )
 
-func Clamp(v, min, max float64) float64 {
+func Clamp(v, min, max float32) float32 {
 	switch {
 	case v < min:
 		return min
@@ -20,7 +20,7 @@ func Clamp(v, min, max float64) float64 {
  * @param b value at t=1
  * @param t [0, 1] parameter
  */
-func Lerp(a, b, t float64) float64 {
+func Lerp(a, b, t float32) float32 {
 	return a + (b-a)*t
 }
 
@@ -29,16 +29,16 @@ func Lerp(a, b, t float64) float64 {
  * @param w value at t=1
  * @param t [0, 1] parameter
  */
-func LerpVec(v, w *engine.Vec2, t float64) *engine.Vec2 {
+func LerpVec(v, w *engine.Vec2, t float32) *engine.Vec2 {
 	return &engine.Vec2{X: Lerp(v.X, w.X, t), Y: Lerp(v.Y, w.Y, t)}
 }
 
 type Animation interface {
-	IsDone(nowSeconds float64) bool
-	Value(nowSeconds float64) float64
+	IsDone(nowSeconds float32) bool
+	Value(nowSeconds float32) float32
 }
 
-func NewAnimation(startValue, endValue, nowSeconds, durationSeconds float64) Animation {
+func NewAnimation(startValue, endValue, nowSeconds, durationSeconds float32) Animation {
 	return &timeBasedAnimation{
 		startValue:      startValue,
 		endValue:        endValue,
@@ -49,19 +49,19 @@ func NewAnimation(startValue, endValue, nowSeconds, durationSeconds float64) Ani
 }
 
 type timeBasedAnimation struct {
-	startSeconds float64
-	endSeconds   float64
-	startValue   float64
-	endValue     float64
+	startSeconds float32
+	endSeconds   float32
+	startValue   float32
+	endValue     float32
 
-	durationSeconds float64
+	durationSeconds float32
 }
 
-func (a *timeBasedAnimation) IsDone(nowSeconds float64) bool {
+func (a *timeBasedAnimation) IsDone(nowSeconds float32) bool {
 	return nowSeconds >= a.endSeconds
 }
 
-func (a *timeBasedAnimation) Value(nowSeconds float64) float64 {
+func (a *timeBasedAnimation) Value(nowSeconds float32) float32 {
 	if a.IsDone(nowSeconds) {
 		return a.endValue
 	}

@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-func nextTumbleHeight(height float64) float64 {
+func nextTumbleHeight(height float32) float32 {
 	for _, h := range TumbleLevels {
 		if h < height {
 			return h
@@ -16,10 +16,10 @@ func nextTumbleHeight(height float64) float64 {
 }
 
 type TumbleAnimation struct {
-	sign         float64
-	startHeight  float64
-	startAngle   float64
-	targetHeight float64
+	sign         float32
+	startHeight  float32
+	startAngle   float32
+	targetHeight float32
 }
 
 type RotationDirection int
@@ -29,16 +29,16 @@ const (
 	Clockwise        = RotationDirection(-1)
 )
 
-func NewTumbleAnimation(direction RotationDirection, startHeight float64) *TumbleAnimation {
+func NewTumbleAnimation(direction RotationDirection, startHeight float32) *TumbleAnimation {
 	return &TumbleAnimation{
-		sign:         float64(direction),
+		sign:         float32(direction),
 		startHeight:  startHeight,
 		startAngle:   0,
 		targetHeight: nextTumbleHeight(startHeight),
 	}
 }
 
-func (t *TumbleAnimation) AngleFor(height float64) float64 {
+func (t *TumbleAnimation) AngleFor(height float32) float32 {
 	if height >= t.startHeight {
 		return t.startAngle
 	}
@@ -46,7 +46,7 @@ func (t *TumbleAnimation) AngleFor(height float64) float64 {
 	if height <= t.targetHeight {
 		t.startHeight = t.targetHeight
 		t.targetHeight = nextTumbleHeight(t.startHeight)
-		t.startAngle += (math.Pi / 2.0) * float64(t.sign)
+		t.startAngle += (math.Pi / 2.0) * float32(t.sign)
 		Bus.Emit(context.Background(), ToddVerticalLevelChanged, t.targetHeight)
 	}
 

@@ -3,6 +3,8 @@ package engine
 import (
 	"fmt"
 	"math"
+
+	"git.maze.io/go/math32"
 )
 
 // All geometry takes place on a Cartesian plane where X increases to the right
@@ -11,12 +13,17 @@ import (
 // Vec2 is a 2D vector. We treat this structure as vectors sometimes, and as
 // points sometimes.
 type Vec2 struct {
-	X, Y float64
+	X, Y float32
+}
+
+func SetVec[T, U Numeric](v *Vec2, x T, y U) {
+	v.X = float32(x)
+	v.Y = float32(y)
 }
 
 // Vec creates a Vec2 from any 2 numeric values.
 func Vec[T, U Numeric](x T, y U) *Vec2 {
-	return &Vec2{float64(x), float64(y)}
+	return &Vec2{float32(x), float32(y)}
 }
 
 // Copy returns a deep copy of this Vec2.
@@ -43,8 +50,8 @@ func (v *Vec2) Minus(t *Vec2) *Vec2 {
 }
 
 // Distance returns the Euclidean distance between two points.
-func Distance(p1, p2 *Vec2) float64 {
-	return math.Hypot(p1.X-p2.X, p1.Y-p2.Y)
+func Distance(p1, p2 *Vec2) float32 {
+	return float32(math.Hypot(float64(p1.X-p2.X), float64(p1.Y-p2.Y)))
 }
 
 // Negate returns the component-wise negation of this Vec2.
@@ -53,7 +60,7 @@ func (v *Vec2) Negate() *Vec2 {
 }
 
 // Div component-wise divides this Vec2 by the given Vec2.
-func (v *Vec2) Mul(scalar float64) *Vec2 {
+func (v *Vec2) Mul(scalar float32) *Vec2 {
 	return &Vec2{v.X * scalar, v.Y * scalar}
 }
 
@@ -68,12 +75,16 @@ func (v *Vec2) Normalize() *Vec2 {
 	return r
 }
 
+func (v *Vec2) Length() float32 {
+	return float32(math.Hypot(float64(v.X), float64(v.Y)))
+}
+
 func (v *Vec2) NormSelf() {
-	length := math.Hypot(v.X, v.Y)
+	length := v.Length()
 	v.X, v.Y = v.X/length, v.Y/length
 }
 
-func Dot(v1, v2 *Vec2) float64 {
+func Dot(v1, v2 *Vec2) float32 {
 	return v1.X*v2.X + v1.Y*v2.Y
 }
 
@@ -107,13 +118,13 @@ func NewRectFromCorners(corner1, corner2 *Vec2) *Rect {
 // NewRect creates a new Rect from the given axis-aligned lines, enforcing the
 // ordering of the corners.
 func NewRect[T, U, V, W Numeric](left T, bottom U, right V, top W) *Rect {
-	fl := float64(left)
-	fr := float64(right)
-	ft := float64(top)
-	fb := float64(bottom)
+	fl := float32(left)
+	fr := float32(right)
+	ft := float32(top)
+	fb := float32(bottom)
 	return &Rect{
-		Min: Vec2{math.Min(fl, fr), math.Min(fb, ft)},
-		Max: Vec2{math.Max(fl, fr), math.Max(fb, ft)},
+		Min: *Vec(math32.Min(fl, fr), math32.Min(fb, ft)),
+		Max: *Vec(math32.Max(fl, fr), math32.Max(fb, ft)),
 	}
 }
 
@@ -139,32 +150,32 @@ func (r *Rect) Center() *Vec2 {
 }
 
 // Left returns the leftmost point of this Rect.
-func (r *Rect) Left() float64 {
+func (r *Rect) Left() float32 {
 	return r.Min.X
 }
 
 // Right returns the rightmost point of this Rect.
-func (r *Rect) Right() float64 {
+func (r *Rect) Right() float32 {
 	return r.Max.X
 }
 
 // Bottom returns the bottommost point of this Rect.
-func (r *Rect) Bottom() float64 {
+func (r *Rect) Bottom() float32 {
 	return r.Min.Y
 }
 
 // Top returns the topmost point of this Rect.
-func (r *Rect) Top() float64 {
+func (r *Rect) Top() float32 {
 	return r.Max.Y
 }
 
 // Width returns the width of this rectangle.
-func (r *Rect) Width() float64 {
+func (r *Rect) Width() float32 {
 	return r.Max.X - r.Min.X
 }
 
 // Height returns the height of this rectangle.
-func (r *Rect) Height() float64 {
+func (r *Rect) Height() float32 {
 	return r.Max.Y - r.Min.Y
 }
 
@@ -180,7 +191,7 @@ func (r *Rect) Inset(delta *Vec2) *Rect {
 	}
 }
 
-func (r *Rect) SetBottomPreservingSize(bottom float64) {
+func (r *Rect) SetBottomPreservingSize(bottom float32) {
 	delta := r.Min.Y - bottom
 	r.Min.Y -= delta
 	r.Max.Y -= delta
@@ -208,7 +219,7 @@ func (r *Rect) String() string {
 // ⎡m[0]   m[1]   m[2]⎤
 // ⎢m[3]   m[4]   m[5]⎥
 // ⎣ 0      0       1 ⎦
-type Affine [6]float64
+type Affine [6]float32
 
 // Identity is the identity transform.
 func Identity() *Affine {
@@ -229,16 +240,16 @@ func Scale(s *Vec2) *Affine {
 // UniformScale creates a uniform scaling transform.
 func UniformScale[T Numeric](s T) *Affine {
 	return &Affine{
-		float64(s), 0, 0,
-		0, float64(s), 0,
+		float32(s), 0, 0,
+		0, float32(s), 0,
 	}
 }
 
 // Translation creates a translation transform.
 func Translation[T Numeric](tx, ty T) *Affine {
 	return &Affine{
-		1, 0, float64(tx),
-		0, 1, float64(ty),
+		1, 0, float32(tx),
+		0, 1, float32(ty),
 	}
 }
 
@@ -250,9 +261,9 @@ func TranslationV(delta *Vec2) *Affine {
 }
 
 // Rotation creates a rotation transform.
-func Rotation(angle float64) *Affine {
-	sin := math.Sin(angle)
-	cos := math.Cos(angle)
+func Rotation(angle float32) *Affine {
+	sin := math32.Sin(angle)
+	cos := math32.Cos(angle)
 	return &Affine{
 		cos, -sin, 0,
 		sin, cos, 0,
@@ -260,7 +271,7 @@ func Rotation(angle float64) *Affine {
 }
 
 // RotationAround returns a transform that rotates around the given point.
-func RotationAround(angle float64, p *Vec2) *Affine {
+func RotationAround(angle float32, p *Vec2) *Affine {
 	return Compose(Translation(-p.X, -p.Y), Rotation(angle), Translation(p.X, p.Y))
 }
 
@@ -339,7 +350,7 @@ func (m *Affine) TransformVec2(p *Vec2) *Vec2 {
 }
 
 // Transform applies the affine transform to the given coordinate.
-func (m *Affine) Transform(x, y float64) (float64, float64) {
+func (m *Affine) Transform(x, y float32) (float32, float32) {
 	return m[0]*x + m[1]*y + m[2], m[3]*x + m[4]*y + m[5]
 
 }

@@ -22,7 +22,7 @@ const debug = false
 
 type windowInfo struct {
 	// width to height ratio of the game's desired viewport
-	aspectRatio float64
+	aspectRatio float32
 
 	// Managing layout.
 	// lastW and lastH are the last device pixel width and height requested
@@ -68,7 +68,7 @@ func (game *ebitenGame) Update() error {
 
 	game.userGame.UpdateInput(us)
 	for game.accumulator += dt.Seconds(); game.accumulator >= tick; game.accumulator -= tick {
-		us.NowSeconds = game.lastWorldTimeSeconds + tick
+		us.NowSeconds = float32(game.lastWorldTimeSeconds + tick)
 		game.userGame.UpdatePhysics(us)
 		game.lastWorldTimeSeconds += tick
 	}
@@ -105,8 +105,8 @@ func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 		log.Printf("layout %dx%d", outsideWidth, outsideHeight)
 		win.lastW = outsideWidth
 		win.lastH = outsideHeight
-		s := ebiten.DeviceScaleFactor()
-		w, h := s*float64(outsideWidth), s*float64(outsideHeight)
+		s := float32(ebiten.DeviceScaleFactor())
+		w, h := s*float32(outsideWidth), s*float32(outsideHeight)
 		log.Printf("scaled %0.1fx%0.1f", w, h)
 		if w/h > win.aspectRatio {
 			w = h * win.aspectRatio
@@ -140,7 +140,7 @@ func RunGameLoop(userGame GameModule, width, height int, title string) {
 
 	game := &ebitenGame{
 		userGame:         userGame,
-		window:           windowInfo{aspectRatio: float64(width) / float64(height)},
+		window:           windowInfo{aspectRatio: float32(width) / float32(height)},
 		debugFont:        font,
 		debugFace:        truetype.NewFace(font, &truetype.Options{Size: 72}),
 		lastEbitenUpdate: time.Now(),

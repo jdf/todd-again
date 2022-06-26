@@ -4,8 +4,8 @@ import "github.com/hajimehoshi/ebiten/v2"
 
 type UpdateState struct {
 	Input        *InputState
-	NowSeconds   float64
-	DeltaSeconds float64
+	NowSeconds   float32
+	DeltaSeconds float32
 }
 
 type GameModule interface {
