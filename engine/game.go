@@ -8,8 +8,12 @@ type UpdateState struct {
 	DeltaSeconds float64
 }
 
-type Game interface {
+type GameModule interface {
 	Resize(w, h int)
-	Update(*UpdateState)
+	// Called potentially multiple times per frame.
+	UpdatePhysics(*UpdateState)
+	// Called once per frame.
+	UpdateInput(*UpdateState)
+	// Called once per frame.
 	Draw(*ebiten.Image, *Graphics)
 }

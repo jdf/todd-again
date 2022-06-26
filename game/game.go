@@ -2,6 +2,8 @@ package game
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/inkyblackness/imgui-go/v4"
 	"github.com/jdf/todd-again/engine"
 	"github.com/jdf/todd-again/game/tuning"
 	"github.com/tanema/gween"
@@ -13,23 +15,33 @@ var (
 
 const DebugWorld = true
 
-type ToddGame struct{}
+type toddGame struct {
+	ui *tuning.UI
+}
 
-func (ToddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
+func NewToddGame() engine.GameModule {
+	return &toddGame{
+		ui: tuning.NewUI(),
+	}
+}
+
+func (g *toddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 	ctx.SetWorldToScreen(Camera.GetTransform())
 	for _, plat := range Platforms {
 		plat.Draw(img, ctx)
 	}
 	Todd.Draw(img, ctx)
+	g.ui.Draw(img, ctx)
 }
 
-func (ToddGame) Resize(w, h int) {
+func (g *toddGame) Resize(w, h int) {
 	ar := float64(w) / float64(h)
 	Camera = engine.NewCamera(
 		engine.NewRect(-200, -10, 200, 400.0/ar-10),
 		engine.NewRect(0, 0, w, h),
 		engine.FlipYAxis)
 	Camera.SetCenterX(Todd.pos.X)
+	g.ui.Resize(w, h)
 }
 
 func AnimateCameraVertical() {
@@ -61,7 +73,15 @@ func ControlCamera(s *engine.UpdateState) {
 	}
 }
 
-func (ToddGame) Update(s *engine.UpdateState) {
+func (g *toddGame) UpdateInput(s *engine.UpdateState) {
+	cap := imgui.CurrentIO().WantCaptureKeyboard()
+	if !(g.ui.Showing && cap) && inpututil.IsKeyJustPressed(ebiten.KeyU) {
+		g.ui.Showing = !g.ui.Showing
+	}
+	g.ui.UpdateInput(s)
+}
+
+func (g *toddGame) UpdatePhysics(s *engine.UpdateState) {
 	Todd.Update(s)
 	ControlCamera(s)
 }

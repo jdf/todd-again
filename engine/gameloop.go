@@ -18,7 +18,7 @@ const (
 	maxOffscreenBufferDimension = 4096
 )
 
-const debug = true
+const debug = false
 
 type windowInfo struct {
 	// width to height ratio of the game's desired viewport
@@ -35,7 +35,7 @@ type windowInfo struct {
 }
 
 type ebitenGame struct {
-	userGame Game
+	userGame GameModule
 
 	window windowInfo
 
@@ -66,9 +66,10 @@ func (game *ebitenGame) Update() error {
 		DeltaSeconds: tick,
 	}
 
+	game.userGame.UpdateInput(us)
 	for game.accumulator += dt.Seconds(); game.accumulator >= tick; game.accumulator -= tick {
 		us.NowSeconds = game.lastWorldTimeSeconds + tick
-		game.userGame.Update(us)
+		game.userGame.UpdatePhysics(us)
 		game.lastWorldTimeSeconds += tick
 	}
 
@@ -130,7 +131,7 @@ func (game *ebitenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 // RunGameLoop initializes and runs the game.
-func RunGameLoop(userGame Game, width, height int, title string) {
+func RunGameLoop(userGame GameModule, width, height int, title string) {
 	ebiten.SetWindowSize(width, height)
 	ebiten.SetWindowTitle(title)
 	ebiten.SetScreenClearedEveryFrame(true)
