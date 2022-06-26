@@ -8,6 +8,7 @@ import (
 
 	"github.com/jdf/todd-again/engine"
 	"github.com/jdf/todd-again/game"
+	"github.com/jdf/todd-again/game/tuning"
 )
 
 func main() {
@@ -26,4 +27,5 @@ func main() {
 	}
 
 	engine.RunGameLoop(game.NewToddGame(), 800, 800, "Todd Again")
+	tuning.Save()
 }

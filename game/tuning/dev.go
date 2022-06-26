@@ -12,7 +12,7 @@ var (
 	tuningProtoPath = flag.String("tuning_proto_path", "/tmp/tuning.textproto", "Path to proto file")
 )
 
-func SaveTuning() error {
+func Save() error {
 	buf, err := prototext.MarshalOptions{
 		Multiline: true,
 		Indent:    "    ",
