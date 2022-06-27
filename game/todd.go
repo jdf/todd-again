@@ -84,9 +84,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		t.AccelX(accel * dt)
 	} else {
 		t.ApplyBearingFriction()
-		if t.Grounded() {
-			t.ApplyFriction()
-		}
+		t.ApplyFriction()
 	}
 
 	if t.blinkCumulativeTime != -1 {
@@ -304,7 +302,12 @@ func (t *Dude) Jump() {
 }
 
 func (t *Dude) ApplyFriction() {
-	t.vel.X *= tuning.Instance.GetFriction()
+	if t.Grounded() {
+		t.vel.X *= tuning.Instance.GetFriction()
+	} else {
+		t.vel.X *= tuning.Instance.GetAirFriction()
+	}
+
 	if math32.Abs(t.vel.X) < 1 {
 		t.vel.X = 0
 	}

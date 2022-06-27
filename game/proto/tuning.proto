@@ -50,4 +50,8 @@ message Tuning {
 
   optional float jump_request_slop_seconds = 19 [ default = 0.2 ];
   optional float grounding_slop_seconds = 20 [ default = 0.2 ];
+
+  // A unitless constant that we apply to velocity while in the ground.
+  // Thanks, Jonah!
+  optional float air_friction = 21 [ default = 0.99 ];
 }
