@@ -108,10 +108,11 @@ type Tuning struct {
 
 	Bg             *Color   `protobuf:"bytes,1,opt,name=bg" json:"bg,omitempty"`
 	ToddSideLength *float32 `protobuf:"fixed32,2,opt,name=todd_side_length,json=toddSideLength,def=30" json:"todd_side_length,omitempty"`
-	// A unitless constant that we apply to velocity while on the ground.
+	// A unitless constant that we scale velocity by while on the ground.
 	Friction *float32 `protobuf:"fixed32,3,opt,name=friction,def=0.97" json:"friction,omitempty"`
-	// A unitless constant that we apply to bearing when not accelerating.
-	BearingFriction     *float32 `protobuf:"fixed32,4,opt,name=bearing_friction,json=bearingFriction,def=0.95" json:"bearing_friction,omitempty"`
+	// A unitless constant that we scale bearing by when not accelerating.
+	BearingFriction *float32 `protobuf:"fixed32,4,opt,name=bearing_friction,json=bearingFriction,def=0.95" json:"bearing_friction,omitempty"`
+	// Negative is down.
 	Gravity             *float32 `protobuf:"fixed32,5,opt,name=gravity,def=-1200" json:"gravity,omitempty"`
 	MaxVelocity         *float32 `protobuf:"fixed32,6,opt,name=max_velocity,json=maxVelocity,def=240" json:"max_velocity,omitempty"`
 	Acceleration        *float32 `protobuf:"fixed32,7,opt,name=acceleration,def=900" json:"acceleration,omitempty"`
@@ -130,7 +131,8 @@ type Tuning struct {
 	CameraTiltSeconds           *float32 `protobuf:"fixed32,18,opt,name=camera_tilt_seconds,json=cameraTiltSeconds,def=0.2" json:"camera_tilt_seconds,omitempty"`
 	JumpRequestSlopSeconds      *float32 `protobuf:"fixed32,19,opt,name=jump_request_slop_seconds,json=jumpRequestSlopSeconds,def=0.2" json:"jump_request_slop_seconds,omitempty"`
 	GroundingSlopSeconds        *float32 `protobuf:"fixed32,20,opt,name=grounding_slop_seconds,json=groundingSlopSeconds,def=0.2" json:"grounding_slop_seconds,omitempty"`
-	// A unitless constant that we apply to velocity while in the ground.
+	// A unitless constant that we scale velocity by while in the air.
+	// Thanks, Jonah!
 	AirFriction *float32 `protobuf:"fixed32,21,opt,name=air_friction,json=airFriction,def=0.99" json:"air_friction,omitempty"`
 }
 

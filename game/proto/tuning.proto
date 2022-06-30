@@ -17,12 +17,13 @@ message Tuning {
   optional Color bg = 1;
   optional float todd_side_length = 2 [ default = 30.0 ];
 
-  // A unitless constant that we apply to velocity while on the ground.
+  // A unitless constant that we scale velocity by while on the ground.
   optional float friction = 3 [ default = 0.97 ];
 
-  // A unitless constant that we apply to bearing when not accelerating.
+  // A unitless constant that we scale bearing by when not accelerating.
   optional float bearing_friction = 4 [ default = 0.95 ];
 
+  // Negative is down.
   optional float gravity = 5 [ default = -1200.0 ];
 
   optional float max_velocity = 6 [ default = 240.0 ];
@@ -51,7 +52,7 @@ message Tuning {
   optional float jump_request_slop_seconds = 19 [ default = 0.2 ];
   optional float grounding_slop_seconds = 20 [ default = 0.2 ];
 
-  // A unitless constant that we apply to velocity while in the ground.
+  // A unitless constant that we scale velocity by while in the air.
   // Thanks, Jonah!
   optional float air_friction = 21 [ default = 0.99 ];
 }
