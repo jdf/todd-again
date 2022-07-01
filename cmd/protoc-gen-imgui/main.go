@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/inkyblackness/imgui-go/v4"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -19,9 +21,24 @@ func main() {
 	})
 }
 
-func emitField(g *protogen.GeneratedFile, f *protogen.Field) {
-	if f.Desc.Kind() == protoreflect.MessageKind {
-		g.P("m.", f.GoIdent, ".Render()")
+func emitFloat32(g *protogen.GeneratedFile, f *protogen.Field) {
+	g.P(fmt.Sprintf("tmpFloat32 = ", f.Name))
+	imgui.SliderFloat("", &tmpFloat32, 0, 1)
+	g.P(f.Name, " = tmpFloat32")
+}
+
+func emitFieldRenderingExpression(g *protogen.GeneratedFile, f *protogen.Field) {
+	switch f.Desc.Kind() {
+	case protoreflect.FloatKind:
+		emitFloat32(g, f)
+	case protoreflect.DoubleKind:
+		emitFloat64(g, f)
+	case protoreflect.Int32Kind:
+		emitInt32(g, f)
+	case protoreflect.StringKind:
+		emitString(g, f)
+	case protoreflect.MessageKind:
+		emitMessage(g, f.Message)
 	}
 }
 
@@ -29,16 +46,12 @@ func emitColor(g *protogen.GeneratedFile, m *protogen.Message) {
 
 }
 
-func emitMessage(g *protogen.GeneratedFile, m *protogen.Message) {
-	if m.Desc.FullName() == "game.Color" {
-		emitColor(g, m)
-	} else {
-		g.P("func (m *", m.GoIdent, ") Render() {")
-		for _, f := range m.Fields {
-			emitField(g, f)
-		}
-		g.P("}")
+func emitMessageRenderer(g *protogen.GeneratedFile, m *protogen.Message) {
+	g.P(fmt.Sprintf("func Render%s() {", m.GoIdent.GoName))
+	for _, f := range m.Fields {
+		emitFieldRenderingExpression(g, f)
 	}
+	g.P("}")
 }
 
 type varTypes struct {
@@ -105,7 +118,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) {
 	g.P()
 
 	for _, m := range file.Messages {
-		emitMessage(g, m)
+		emitMessageRenderer(g, m)
 	}
 	g.Content()
 }
