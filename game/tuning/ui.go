@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/inkyblackness/imgui-go/v4"
 	"github.com/jdf/todd-again/engine"
+	"github.com/jdf/todd-again/game/proto"
 )
 
 type UI struct {
@@ -33,19 +34,7 @@ func (ui *UI) UpdateInput(s *engine.UpdateState) {
 	}
 	ui.mgr.Update(float32(s.DeltaSeconds))
 	ui.mgr.BeginFrame()
-	{
-		imgui.CollapsingHeader("World Physics")
-		if Instance.Gravity == nil {
-			g := Instance.GetGravity()
-			Instance.Gravity = &g
-		}
-		imgui.SliderFloat("Gravity", Instance.Gravity, -5000, 0)
-		imgui.Dummy(imgui.Vec2{X: 0, Y: 60})
-		imgui.SameLineV(0, imgui.ContentRegionAvail().X*.666)
-		if imgui.Button("Hide") {
-			ui.Showing = false
-		}
-	}
+	proto.RenderTuning(Instance)
 	ui.mgr.EndFrame()
 }
 
