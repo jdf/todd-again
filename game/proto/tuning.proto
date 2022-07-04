@@ -4,6 +4,14 @@ package game;
 
 option go_package = "github.com/jdf/todd-again/game/proto";
 
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+  optional string section = 50000;
+  optional float min = 50001;
+  optional float max = 50002;
+}
+
 message Color {
   // all values [0,1]
   optional float red = 1 [ default = 0 ];
@@ -14,45 +22,64 @@ message Color {
 
 // All distances are in world coordinates, all durations are in seconds.
 message Tuning {
-  optional Color bg = 1;
-  optional float todd_side_length = 2 [ default = 30.0 ];
+  // Negative is down.
+  optional float gravity = 1
+      [ default = -1200.0, (section) = "World", (min) = -2000, (max) = -100 ];
+
+  optional Color bg = 2 [ (section) = "Todd" ];
+  optional float todd_side_length = 3 [ (section) = "Todd", default = 30.0 ];
 
   // A unitless constant that we scale velocity by while on the ground.
-  optional float friction = 3 [ default = 0.97 ];
+  optional float friction = 4
+      [ default = 0.97, (section) = "Todd", (min) = 0.9, (max) = 1.0 ];
 
   // A unitless constant that we scale bearing by when not accelerating.
-  optional float bearing_friction = 4 [ default = 0.95 ];
+  optional float bearing_friction = 5
+      [ default = 0.95, (section) = "Todd", (min) = 0.9, (max) = 1.0 ];
 
-  // Negative is down.
-  optional float gravity = 5 [ default = -1200.0 ];
+  optional float max_velocity = 6
+      [ default = 240.0, (section) = "Todd", (min) = 100, (max) = 350 ];
 
-  optional float max_velocity = 6 [ default = 240.0 ];
+  optional float acceleration = 7
+      [ default = 900.0, (section) = "Todd", (min) = 200, (max) = 2000 ];
+  optional float air_bending = 8
+      [ default = 575.0, (section) = "Todd", (min) = 200, (max) = 800 ];
+  optional float bearing_acceleration = 9
+      [ default = 1200.0, (section) = "Todd", (min) = 200, (max) = 2000 ];
 
-  optional float acceleration = 7 [ default = 900.0 ];
-  optional float air_bending = 8 [ default = 575.0 ];
-  optional float bearing_acceleration = 9 [ default = 1200.0 ];
-
-  optional float jump_impulse = 10 [ default = 350.0 ];
-  optional float max_squish_velocity = 11 [ default = 60.0 ];
+  optional float jump_impulse = 10
+      [ default = 350.0, (section) = "Todd", (min) = 100, (max) = 800 ];
+  optional float max_squish_velocity = 11
+      [ default = 60.0, (section) = "Todd", (min) = 20, (max) = 120 ];
 
   // Max vertical velocity while holding down jump.
-  optional float jump_terminal_velocity = 12 [ default = -350.0 ];
-  optional float terminal_velocity = 13 [ default = -550.0 ];
+  optional float jump_terminal_velocity = 12
+      [ default = -350.0, (section) = "Todd", (min) = -600, (max) = -100 ];
+  optional float terminal_velocity = 13
+      [ default = -550.0, (section) = "Todd", (min) = -1000, (max) = -100 ];
 
-  optional float blink_odds = 14 [ default = 0.0003 ];
-  optional float blink_cycle_seconds = 15 [ default = 0.25 ];
+  optional float blink_odds = 14
+      [ default = 0.0003, (section) = "Todd", (min) = 0.00001, (max) = 0.001 ];
+  optional float blink_cycle_seconds = 15
+      [ default = 0.25, (section) = "Todd", (min) = 0, (max) = 2 ];
 
   // Eye centering speed for tumbling/landing.
-  optional float eye_centering_duration_seconds = 16 [ default = 1.0 ];
+  optional float eye_centering_duration_seconds = 16
+      [ default = 1.0, (section) = "Todd", (min) = 0, (max) = 3 ];
 
-  optional float jump_state_gravity_factor = 17 [ default = 0.55 ];
+  optional float jump_state_gravity_factor = 17
+      [ default = 0.55, (section) = "Todd", (min) = 0.2, (max) = 1.0 ];
 
-  optional float camera_tilt_seconds = 18 [ default = 0.2 ];
+  optional float camera_tilt_seconds = 18
+      [ default = 0.2, (section) = "Todd", (min) = 0, (max) = .8 ];
 
-  optional float jump_request_slop_seconds = 19 [ default = 0.2 ];
-  optional float grounding_slop_seconds = 20 [ default = 0.2 ];
+  optional float jump_request_slop_seconds = 19
+      [ default = 0.2, (section) = "Todd", (min) = 0, (max) = .5 ];
+  optional float grounding_slop_seconds = 20
+      [ default = 0.2, (section) = "Todd", (min) = 0, (max) = .5 ];
 
   // A unitless constant that we scale velocity by while in the air.
   // Thanks, Jonah!
-  optional float air_friction = 21 [ default = 0.99 ];
+  optional float air_friction = 21
+      [ default = 0.99, (section) = "Todd", (min) = .85, (max) = 1.0 ];
 }

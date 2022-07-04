@@ -1,7 +1,7 @@
 package tuning
 
 import (
-	_ "embed"
+	"flag"
 
 	"github.com/gabstv/ebiten-imgui/renderer"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -9,6 +9,8 @@ import (
 	"github.com/jdf/todd-again/engine"
 	"github.com/jdf/todd-again/game/proto"
 )
+
+var showUI = flag.Bool("show-ui", false, "Show the UI")
 
 type UI struct {
 	mgr     *renderer.Manager
@@ -29,7 +31,7 @@ func (ui *UI) Resize(w, h int) {
 func (ui *UI) UpdatePhysics(s *engine.UpdateState) {}
 
 func (ui *UI) UpdateInput(s *engine.UpdateState) {
-	if !ui.Showing {
+	if !*showUI {
 		return
 	}
 	ui.mgr.Update(float32(s.DeltaSeconds))

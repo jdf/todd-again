@@ -47,6 +47,15 @@ func RenderColor(p *Color) {
 }
 func RenderTuning(p *Tuning) {
 
+	tmpFloat32 = p.GetGravity()
+
+	imgui.SliderFloat("Gravity", &tmpFloat32, .5*Default_Tuning_Gravity, 2*Default_Tuning_Gravity)
+	if p.Gravity == nil {
+		var f float32
+		p.Gravity = &f
+	}
+	*p.Gravity = tmpFloat32
+
 	tmpFloat32 = p.GetToddSideLength()
 
 	imgui.SliderFloat("ToddSideLength", &tmpFloat32, .5*Default_Tuning_ToddSideLength, 2*Default_Tuning_ToddSideLength)
@@ -73,15 +82,6 @@ func RenderTuning(p *Tuning) {
 		p.BearingFriction = &f
 	}
 	*p.BearingFriction = tmpFloat32
-
-	tmpFloat32 = p.GetGravity()
-
-	imgui.SliderFloat("Gravity", &tmpFloat32, .5*Default_Tuning_Gravity, 2*Default_Tuning_Gravity)
-	if p.Gravity == nil {
-		var f float32
-		p.Gravity = &f
-	}
-	*p.Gravity = tmpFloat32
 
 	tmpFloat32 = p.GetMaxVelocity()
 
