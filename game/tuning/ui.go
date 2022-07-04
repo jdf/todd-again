@@ -10,6 +10,8 @@ import (
 	"github.com/jdf/todd-again/game/proto"
 )
 
+//go:generate ../../gen-tuning-ui.sh
+
 var showUI = flag.Bool("show-ui", false, "Show the UI")
 
 type UI struct {
@@ -41,7 +43,7 @@ func (ui *UI) UpdateInput(s *engine.UpdateState) {
 }
 
 func (ui *UI) Draw(screen *ebiten.Image, g *engine.Graphics) {
-	if ui.Showing {
+	if *showUI {
 		ui.mgr.Draw(screen)
 	}
 }

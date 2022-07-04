@@ -2,8 +2,6 @@ package game
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/inkyblackness/imgui-go/v4"
 	"github.com/jdf/todd-again/engine"
 	"github.com/jdf/todd-again/game/tuning"
 	"github.com/tanema/gween"
@@ -74,10 +72,10 @@ func ControlCamera(s *engine.UpdateState) {
 }
 
 func (g *toddGame) UpdateInput(s *engine.UpdateState) {
-	cap := imgui.CurrentIO().WantCaptureKeyboard()
-	if !(g.ui.Showing && cap) && inpututil.IsKeyJustPressed(ebiten.KeyU) {
-		g.ui.Showing = !g.ui.Showing
-	}
+	// cap := imgui.CurrentIO().WantCaptureKeyboard()
+	// if !(g.ui.Showing && cap) && inpututil.IsKeyJustPressed(ebiten.KeyU) {
+	// 	g.ui.Showing = !g.ui.Showing
+	// }
 	g.ui.UpdateInput(s)
 }
 

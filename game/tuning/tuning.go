@@ -4,7 +4,7 @@ import (
 	"embed"
 
 	"git.maze.io/go/math32"
-	"github.com/jdf/todd-again/game/gamepb"
+	"github.com/jdf/todd-again/game/proto"
 	"github.com/tanema/gween/ease"
 	"google.golang.org/protobuf/encoding/prototext"
 )
@@ -14,7 +14,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	Instance = &gamepb.Tuning{}
+	Instance = &proto.Tuning{}
 	if err = prototext.Unmarshal(buf, Instance); err != nil {
 		panic(err)
 	}
