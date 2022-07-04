@@ -5,8 +5,11 @@ import (
 	"html/template"
 	"log"
 
+	gamepb "github.com/jdf/todd-again/game/proto"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 func main() {
@@ -22,9 +25,17 @@ func main() {
 }
 
 func emitFloat32(g *protogen.GeneratedFile, f *protogen.Field) {
+	opts := f.Desc.Options().(*descriptorpb.FieldOptions)
+	minspec := proto.GetExtension(opts, gamepb.E_Min)
+
 	code := `
 tmpFloat32 = p.Get{{.f.GoName}}()
 
+{{if pipeline}} 
+min :=  
+{{else}} 
+T0 
+{{end}}
 imgui.SliderFloat("{{.f.GoName}}", &tmpFloat32, .5*Default_{{.f.GoIdent.GoName}}, 2*Default_{{.f.GoIdent.GoName}})
 if p.{{.f.GoName}} == nil {
 	var f float32
