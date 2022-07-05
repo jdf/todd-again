@@ -109,7 +109,9 @@ func (g *generator) emitMessageField(f *protogen.Field) {
 		return
 	}
 
-	g.P(fmt.Sprintf("if imgui.CollapsingHeader(%q) {", f.GoName))
+	g.P(fmt.Sprintf(
+		"if imgui.CollapsingHeaderV(%q, imgui.TreeNodeFlagsDefaultOpen) {",
+		f.GoName))
 	g.push(f.GoName)
 	for _, f := range f.Message.Fields {
 		g.emitFieldRenderingExpression(f)

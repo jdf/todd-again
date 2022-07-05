@@ -24,6 +24,7 @@ func NewToddGame() engine.GameModule {
 }
 
 func (g *toddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
+	img.Fill(tuning.RGBA(tuning.Instance.World.GetBg()))
 	ctx.SetWorldToScreen(Camera.GetTransform())
 	for _, plat := range Platforms {
 		plat.Draw(img, ctx)

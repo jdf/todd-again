@@ -25,7 +25,7 @@ func NewUI() *UI {
 
 func (ui *UI) Resize(w, h int) {
 	ui.mgr.SetDisplaySize(float32(w), float32(h))
-	imgui.CurrentIO().SetFontGlobalScale(2.0)
+	imgui.CurrentIO().SetFontGlobalScale(2.5)
 }
 
 func (ui *UI) UpdatePhysics(s *engine.UpdateState) {}

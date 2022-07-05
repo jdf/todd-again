@@ -2,6 +2,7 @@ package tuning
 
 import (
 	"embed"
+	"image/color"
 
 	"git.maze.io/go/math32"
 	"github.com/jdf/todd-again/game/proto"
@@ -50,8 +51,13 @@ var (
 	Step2            float32
 )
 
-func RGB(c *proto.Color) (r, g, b uint8) {
-	return uint8(c.C[0] * 255), uint8(c.C[1] * 255), uint8(c.C[2] * 255)
+func RGBA(c *proto.Color) color.RGBA {
+	return color.RGBA{
+		uint8(c.C[0] * 255),
+		uint8(c.C[1] * 255),
+		uint8(c.C[2] * 255),
+		255,
+	}
 }
 
 func SpeedStepFunction(v float32) int {

@@ -9,7 +9,7 @@ var (
 )
 
 func RenderTuning(p *Tuning) {
-	if imgui.CollapsingHeader("World") {
+	if imgui.CollapsingHeaderV("World", imgui.TreeNodeFlagsDefaultOpen) {
 
 		{
 			tmpFloat32 = p.World.GetGravity()
@@ -31,7 +31,7 @@ func RenderTuning(p *Tuning) {
 			p.World.Bg.C = tmpColor[:]
 		}
 	}
-	if imgui.CollapsingHeader("Todd") {
+	if imgui.CollapsingHeaderV("Todd", imgui.TreeNodeFlagsDefaultOpen) {
 
 		{
 			if p.Todd.Color == nil {
@@ -202,7 +202,7 @@ func RenderTuning(p *Tuning) {
 			}
 			*p.Todd.GroundingSlopSeconds = tmpFloat32
 		}
-		if imgui.CollapsingHeader("Blink") {
+		if imgui.CollapsingHeaderV("Blink", imgui.TreeNodeFlagsDefaultOpen) {
 
 			{
 				tmpFloat32 = p.Todd.Blink.GetOdds()
@@ -225,7 +225,7 @@ func RenderTuning(p *Tuning) {
 			}
 		}
 	}
-	if imgui.CollapsingHeader("Camera") {
+	if imgui.CollapsingHeaderV("Camera", imgui.TreeNodeFlagsDefaultOpen) {
 
 		{
 			tmpFloat32 = p.Camera.GetTiltSeconds()

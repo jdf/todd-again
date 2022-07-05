@@ -2,7 +2,6 @@ package game
 
 import (
 	"context"
-	"image/color"
 	"math/rand"
 	"time"
 
@@ -48,10 +47,9 @@ func init() {
 
 	Controller = engine.EbitenController{}
 	{
-		r, g, b := tuning.RGB(tuning.Instance.Todd.Color)
 		Todd = &Dude{
 			sideLength: tuning.Instance.Todd.GetSideLength(),
-			fillColor:  color.RGBA{r, g, b, 255},
+			fillColor:  tuning.RGBA(tuning.Instance.Todd.Color),
 			pos:        engine.Vec2{X: 0, Y: 0},
 			rnd:        rand.New(rand.NewSource(time.Now().UnixNano())),
 		}
