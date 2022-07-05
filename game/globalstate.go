@@ -46,13 +46,11 @@ func init() {
 	})
 
 	Controller = engine.EbitenController{}
-	{
-		Todd = &Dude{
-			sideLength: tuning.Instance.Todd.GetSideLength(),
-			fillColor:  tuning.RGBA(tuning.Instance.Todd.Color),
-			pos:        engine.Vec2{X: 0, Y: 0},
-			rnd:        rand.New(rand.NewSource(time.Now().UnixNano())),
-		}
+	Todd = &Dude{
+		sideLength: tuning.Instance.Todd.GetSideLength(),
+		fillColor:  tuning.RGBA(tuning.Instance.Todd.Color),
+		pos:        engine.Vec2{X: 0, Y: 0},
+		rnd:        rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 

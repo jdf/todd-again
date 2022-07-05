@@ -36,7 +36,9 @@ func (ui *UI) UpdateInput(s *engine.UpdateState) {
 	}
 	ui.mgr.Update(float32(s.DeltaSeconds))
 	ui.mgr.BeginFrame()
+	imgui.Begin("Settings")
 	proto.RenderTuning(Instance)
+	imgui.End()
 	ui.mgr.EndFrame()
 }
 
