@@ -18,6 +18,25 @@ func init() {
 	if err = prototext.Unmarshal(buf, Instance); err != nil {
 		panic(err)
 	}
+	if Instance.Todd == nil {
+		Instance.Todd = &proto.Todd{
+			Blink: &proto.Blink{},
+			Color: &proto.Color{
+				C: []float32{233 / 255.0, 180 / 255.0, 30 / 255.0},
+			},
+		}
+	}
+	if Instance.World == nil {
+		Instance.World = &proto.World{}
+		Instance.World.Bg = &proto.Color{
+			C: []float32{0, 0, 0},
+		}
+	}
+	if Instance.Camera == nil {
+		Instance.Camera = &proto.Camera{}
+	}
+	Step1 = Instance.Todd.GetMaxVelocity() * .333
+	Step2 = Instance.Todd.GetMaxVelocity() * .666
 }
 
 var (
@@ -27,9 +46,13 @@ var (
 	assets embed.FS
 
 	CameraTiltEasing = ease.Linear
-	Step1            = Instance.GetMaxVelocity() * .333
-	Step2            = Instance.GetMaxVelocity() * .666
+	Step1            float32
+	Step2            float32
 )
+
+func RGB(c *proto.Color) (r, g, b uint8) {
+	return uint8(c.C[0] * 255), uint8(c.C[1] * 255), uint8(c.C[2] * 255)
+}
 
 func SpeedStepFunction(v float32) int {
 	v = math32.Abs(v)
@@ -47,7 +70,7 @@ func SpeedStepFunction(v float32) int {
 var JumpImpulseFactors = []float32{1, 1, 1.2}
 
 func GetJumpImpulse(speed float32) float32 {
-	return Instance.GetJumpImpulse() * JumpImpulseFactors[SpeedStepFunction(speed)]
+	return Instance.Todd.GetJumpImpulse() * JumpImpulseFactors[SpeedStepFunction(speed)]
 }
 
 // The platform has a width differing from its apparent width, depending on

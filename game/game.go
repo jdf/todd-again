@@ -53,7 +53,7 @@ func AnimateCameraVertical() {
 	CameraVerticalAnimation = gween.New(
 		float32(b.Bottom()),
 		float32(target),
-		float32(tuning.Instance.GetCameraTiltSeconds()),
+		float32(tuning.Instance.Camera.GetTiltSeconds()),
 		tuning.CameraTiltEasing)
 }
 

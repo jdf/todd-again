@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"strings"
 
 	gamepb "github.com/jdf/todd-again/game/proto"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -26,6 +27,19 @@ func main() {
 
 type generator struct {
 	*protogen.GeneratedFile
+	path []string
+}
+
+func (g *generator) push(name string) {
+	g.path = append(g.path, name)
+}
+
+func (g *generator) pop() {
+	g.path = g.path[:len(g.path)-1]
+}
+
+func (g *generator) Path() string {
+	return strings.Join(g.path, ".")
 }
 
 func (g *generator) doTemplate(code string, data interface{}) {
@@ -43,6 +57,7 @@ func (g *generator) emitFloat32(f *protogen.Field) {
 
 	data := map[string]interface{}{
 		"name": f.GoName,
+		"path": g.Path(),
 	}
 
 	opts := f.Desc.Options().(*descriptorpb.FieldOptions)
@@ -56,96 +71,76 @@ func (g *generator) emitFloat32(f *protogen.Field) {
 	}
 	code := `
 	{
-		tmpFloat32 = p.Get{{.name}}()
+		tmpFloat32 = {{.path}}.Get{{.name}}()
 		imgui.SliderFloat("{{.name}}", &tmpFloat32, {{.min}}, {{.max}})
-		if p.{{.name}} == nil {
+		if {{.path}}.{{.name}} == nil {
 			var f float32
-			p.{{.name}} = &f
+			{{.path}}.{{.name}} = &f
 		}
-		*p.{{.name}} = tmpFloat32
+		*{{.path}}.{{.name}} = tmpFloat32
 	}
 `
 	g.doTemplate(code, data)
 }
 
-func (g *generator) emitFloat64(f *protogen.Field) {
-	name := f.GoName
-	code := fmt.Sprintf(`
-tmpFloat64 = p.Get%s()
-imgui.InputFloat("%s", &tmpFloat64)
-if p.%s == nil {
-	var f float64
-	p.%s = &f
-}
-*p.%s = tmpFloat64
-	`, name, name, name, name, name)
-	g.P(code)
+func (g *generator) emitColor(f *protogen.Field) {
+	data := map[string]interface{}{
+		"name": f.GoName,
+		"path": g.Path(),
+	}
+	code := `
+	{
+		if {{.path}}.{{.name}} == nil {
+			{{.path}}.{{.name}} = &Color{
+				C: []float32{0,0,0},
+			}
+		}
+		imgui.ColorEdit3("{{.name}}", &tmpColor)
+		{{.path}}.{{.name}}.C = tmpColor[:]
+	}
+`
+
+	g.doTemplate(code, data)
 }
 
-func (g *generator) emitInt32(f *protogen.Field) {
-	name := f.GoName
-	code := fmt.Sprintf(`
-tmpInt32 = p.Get%s()
-imgui.InputInt("%s", &tmpInt32)
-if p.%s == nil {
-	var i int32
-	p.%s = &i
-}
-*p.%s = tmpInt32
-	`, name, name, name, name, name)
-	g.P(code)
-}
+func (g *generator) emitMessageField(f *protogen.Field) {
+	if f.Message.Desc.FullName() == "game.Color" {
+		g.emitColor(f)
+		return
+	}
 
-func (g *generator) emitString(f *protogen.Field) {
-	name := f.GoName
-	code := fmt.Sprintf(`
-tmpString = p.Get%s()
-imgui.InputText("%s", &tmpString)
-if p.%s == nil {
-	var s string
-	p.%s = &s
-}
-*p.%s = tmpString
-	`, name, name, name, name, name)
-	g.P(code)
-}
-
-func (g *generator) emitMessage(m *protogen.Message) {
-
+	g.P(fmt.Sprintf("if imgui.CollapsingHeader(%q) {", f.GoName))
+	g.push(f.GoName)
+	for _, f := range f.Message.Fields {
+		g.emitFieldRenderingExpression(f)
+	}
+	g.pop()
+	g.P("}")
 }
 
 func (g *generator) emitFieldRenderingExpression(f *protogen.Field) {
 	switch f.Desc.Kind() {
+	case protoreflect.MessageKind:
+		g.emitMessageField(f)
 	case protoreflect.FloatKind:
 		g.emitFloat32(f)
-	case protoreflect.DoubleKind:
-		g.emitFloat64(f)
-	case protoreflect.Int32Kind:
-		g.emitInt32(f)
-	case protoreflect.StringKind:
-		g.emitString(f)
-	case protoreflect.MessageKind:
-		g.emitMessage(f.Message)
+	default:
+		log.Fatalf("unsupported field type: %v", f.Desc.Kind())
 	}
-}
-
-func emitColor(g *protogen.GeneratedFile, m *protogen.Message) {
-
 }
 
 func (g *generator) emitMessageRenderer(m *protogen.Message) {
 	g.P(fmt.Sprintf("func Render%s(p *%s) {", m.GoIdent.GoName, g.QualifiedGoIdent(m.GoIdent)))
+	g.push("p")
 	for _, f := range m.Fields {
 		g.emitFieldRenderingExpression(f)
 	}
+	g.pop()
 	g.P("}")
 }
 
 type varTypes struct {
 	hasFloat32 bool
-	hasFloat64 bool
-	hasInt32   bool
-	hasString  bool
 	hasColor   bool
 }
 
@@ -154,14 +149,8 @@ func (v *varTypes) gather(m *protogen.Message) {
 		switch f.Desc.Kind() {
 		case protoreflect.FloatKind:
 			v.hasFloat32 = true
-		case protoreflect.DoubleKind:
-			v.hasFloat64 = true
-		case protoreflect.Int32Kind:
-			v.hasInt32 = true
-		case protoreflect.StringKind:
-			v.hasString = true
 		case protoreflect.MessageKind:
-			if f.Desc.FullName() == "game.Color" {
+			if f.Message.Desc.FullName() == "game.Color" {
 				v.hasColor = true
 			} else {
 				v.gather(f.Message)
@@ -181,17 +170,8 @@ func (g *generator) emitVars(file *protogen.File) {
 	if v.hasFloat32 {
 		g.P("tmpFloat32 float32")
 	}
-	if v.hasFloat64 {
-		g.P("tmpFloat64 float64")
-	}
-	if v.hasInt32 {
-		g.P("tmpInt32 int32")
-	}
-	if v.hasString {
-		g.P("tmpString string")
-	}
 	if v.hasColor {
-		g.P("tmpColor [3]float32")
+		g.P("tmpColor = [3]float32{0,0,0}")
 	}
 	g.P(")")
 }
@@ -199,7 +179,10 @@ func (g *generator) emitVars(file *protogen.File) {
 // generateFile generates go source to render a UI for editing the source proto.
 func generateFile(gen *protogen.Plugin, file *protogen.File) {
 	filename := file.GeneratedFilenamePrefix + "_dear_imgui.go"
-	g := &generator{gen.NewGeneratedFile(filename, file.GoImportPath)}
+	g := &generator{
+		gen.NewGeneratedFile(filename, file.GoImportPath),
+		[]string{},
+	}
 
 	g.P("// Code generated by protoc-gen-imgui. DO NOT EDIT.")
 	g.P("package ", file.GoPackageName)
@@ -209,7 +192,12 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) {
 	g.emitVars(file)
 
 	for _, m := range file.Messages {
-		g.emitMessageRenderer(m)
+		opts := m.Desc.Options().(*descriptorpb.MessageOptions)
+		if proto.HasExtension(opts, gamepb.E_TopLevel) &&
+			proto.GetExtension(opts, gamepb.E_TopLevel).(bool) {
+			log.Printf("top level message: %v", m.GoIdent.GoName)
+			g.emitMessageRenderer(m)
+		}
 	}
 	g.Content()
 }

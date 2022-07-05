@@ -10,8 +10,6 @@ import (
 	"github.com/jdf/todd-again/game/proto"
 )
 
-//go:generate ../../gen-tuning-ui.sh
-
 var showUI = flag.Bool("show-ui", false, "Show the UI")
 
 type UI struct {

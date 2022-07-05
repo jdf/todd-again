@@ -64,23 +64,23 @@ func (t *Dude) Update(s *engine.UpdateState) {
 	grounded := t.Grounded()
 
 	if grounded {
-		groundingSlopTimerSeconds = tuning.Instance.GetGroundingSlopSeconds()
+		groundingSlopTimerSeconds = tuning.Instance.Todd.GetGroundingSlopSeconds()
 	} else {
 		groundingSlopTimerSeconds -= dt
 	}
 
 	canJump := groundingSlopTimerSeconds > 0
 
-	accel := tuning.Instance.GetAcceleration()
+	accel := tuning.Instance.Todd.GetAcceleration()
 	if !grounded {
-		accel = tuning.Instance.GetAirBending()
+		accel = tuning.Instance.Todd.GetAirBending()
 	}
 
 	if Controller.Left() {
-		t.AdjustBearing(-tuning.Instance.GetBearingAcceleration() * dt)
+		t.AdjustBearing(-tuning.Instance.Todd.GetBearingAcceleration() * dt)
 		t.AccelX(-accel * dt)
 	} else if Controller.Right() {
-		t.AdjustBearing(tuning.Instance.GetBearingAcceleration() * dt)
+		t.AdjustBearing(tuning.Instance.Todd.GetBearingAcceleration() * dt)
 		t.AccelX(accel * dt)
 	} else {
 		t.ApplyBearingFriction()
@@ -89,17 +89,17 @@ func (t *Dude) Update(s *engine.UpdateState) {
 
 	if t.blinkCumulativeTime != -1 {
 		t.blinkCumulativeTime += dt
-		if t.blinkCumulativeTime >= tuning.Instance.GetBlinkCycleSeconds() {
+		if t.blinkCumulativeTime >= tuning.Instance.Todd.Blink.GetCycleSeconds() {
 			t.blinkCumulativeTime = -1
 		}
 	}
 
-	if t.rnd.Float32() < tuning.Instance.GetBlinkOdds() {
+	if t.rnd.Float32() < tuning.Instance.Todd.Blink.GetOdds() {
 		t.Blink()
 	}
 
 	if Controller.Jump() {
-		jumpRequestTimerSeconds = tuning.Instance.GetJumpRequestSlopSeconds()
+		jumpRequestTimerSeconds = tuning.Instance.Todd.GetJumpRequestSlopSeconds()
 	}
 	wantJump := jumpRequestTimerSeconds > 0
 	if wantJump {
@@ -108,9 +108,9 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		jumpRequestTimerSeconds -= dt
 	}
 
-	gravity := tuning.Instance.GetGravity()
+	gravity := tuning.Instance.World.GetGravity()
 	if t.vel.Y > 0 && wantJump {
-		gravity *= tuning.Instance.GetJumpStateGravityFactor()
+		gravity *= tuning.Instance.Todd.GetJumpStateGravityFactor()
 	}
 
 	t.AccelY(gravity * dt)
@@ -161,9 +161,9 @@ func (t *Dude) Update(s *engine.UpdateState) {
 				t.eyeCentering,
 				0,
 				s.NowSeconds,
-				tuning.Instance.GetEyeCenteringDurationSeconds())
+				tuning.Instance.Todd.GetEyeCenteringDurationSeconds())
 			// blink on hard landing
-			if oldvel > tuning.Instance.GetTerminalVelocity()*0.95 {
+			if oldvel > tuning.Instance.Todd.GetTerminalVelocity()*0.95 {
 				t.Blink()
 			}
 			t.vSquishVel = oldvel / 5.0
@@ -177,7 +177,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 	} else if !colliding {
 		JumpState = JumpStateJumping // we fell off a platform
 		// Squish, but, if already squishing, squish in that direction.
-		FallingSquishVel := .5 * tuning.Instance.GetMaxSquishVelocity()
+		FallingSquishVel := .5 * tuning.Instance.Todd.GetMaxSquishVelocity()
 		if FallingSquishVel > math32.Abs(t.vSquishVel) {
 			t.vSquishVel = math32.Copysign(FallingSquishVel, t.vSquishVel)
 		}
@@ -187,7 +187,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		}
 		t.tumbleAnimation = NewTumbleAnimation(dir, t.pos.Y)
 		t.eyeCenteringAnimation = NewAnimation(t.eyeCentering,
-			1, s.NowSeconds, tuning.Instance.GetEyeCenteringDurationSeconds())
+			1, s.NowSeconds, tuning.Instance.Todd.GetEyeCenteringDurationSeconds())
 	}
 
 	if math32.Abs(t.vSquishVel+t.vSquish) < 0.01 {
@@ -203,7 +203,7 @@ func (t *Dude) Update(s *engine.UpdateState) {
 		dampingForce := damping * t.vSquishVel
 		t.vSquishVel += (squishForce - dampingForce) * dt
 		t.vSquishVel = Clamp(
-			t.vSquishVel, -tuning.Instance.GetMaxSquishVelocity(), tuning.Instance.GetMaxSquishVelocity())
+			t.vSquishVel, -tuning.Instance.Todd.GetMaxSquishVelocity(), tuning.Instance.Todd.GetMaxSquishVelocity())
 		t.vSquish += t.vSquishVel * dt
 	}
 
@@ -245,7 +245,7 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 		g.DrawLine(img, -.5, .5, .5, -.5)
 	}
 
-	speedRatio := math32.Abs(t.bearing / tuning.Instance.GetMaxVelocity())
+	speedRatio := math32.Abs(t.bearing / tuning.Instance.Todd.GetMaxVelocity())
 	eyeVCenter := half + 4 + t.vSquish
 	eyeOffset := Lerp(0, half-6, speedRatio)
 	pupilOffset := Lerp(0, half-3, speedRatio)
@@ -263,7 +263,7 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 	g.DrawEllipse(img, engine.NewRect(pupilPos.X-1.5, pupilPos.Y-1.5, pupilPos.X+1.5, pupilPos.Y+1.5))
 
 	if t.blinkCumulativeTime != -1 {
-		blinkCycle := t.blinkCumulativeTime / tuning.Instance.GetBlinkCycleSeconds()
+		blinkCycle := t.blinkCumulativeTime / tuning.Instance.Todd.Blink.GetCycleSeconds()
 		lidTop := eyePos.Y + 6
 		lidBottom := lidTop - 12*math32.Sin(math.Pi*blinkCycle)
 		g.SetColor(t.fillColor)
@@ -274,15 +274,15 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 }
 
 func (t *Dude) AccelX(a float32) {
-	maxvel := tuning.Instance.GetMaxVelocity()
+	maxvel := tuning.Instance.Todd.GetMaxVelocity()
 	t.vel.X = Clamp(t.vel.X+a, -maxvel, maxvel)
 }
 
 func (t *Dude) AccelY(a float32) {
 	t.vel.Y = t.vel.Y + a
-	maxVel := tuning.Instance.GetTerminalVelocity()
+	maxVel := tuning.Instance.Todd.GetTerminalVelocity()
 	if Controller.Jump() {
-		maxVel = tuning.Instance.GetJumpTerminalVelocity()
+		maxVel = tuning.Instance.Todd.GetJumpTerminalVelocity()
 	}
 	if t.vel.Y < maxVel {
 		t.vel.Y = maxVel
@@ -290,7 +290,7 @@ func (t *Dude) AccelY(a float32) {
 }
 
 func (t *Dude) AdjustBearing(a float32) {
-	maxvel := tuning.Instance.GetMaxVelocity()
+	maxvel := tuning.Instance.Todd.GetMaxVelocity()
 	t.bearing = Clamp(t.bearing+a, -maxvel, maxvel)
 }
 
@@ -298,14 +298,14 @@ func (t *Dude) Jump() {
 	JumpState = JumpStateJumping
 	t.initialJumpSpeed = math32.Abs(t.vel.X)
 	t.vel.Y = tuning.GetJumpImpulse(t.initialJumpSpeed)
-	t.vSquishVel = tuning.Instance.GetMaxSquishVelocity()
+	t.vSquishVel = tuning.Instance.Todd.GetMaxSquishVelocity()
 }
 
 func (t *Dude) ApplyFriction() {
 	if t.Grounded() {
-		t.vel.X *= tuning.Instance.GetFriction()
+		t.vel.X *= tuning.Instance.Todd.GetFriction()
 	} else {
-		t.vel.X *= tuning.Instance.GetAirFriction()
+		t.vel.X *= tuning.Instance.Todd.GetAirFriction()
 	}
 
 	if math32.Abs(t.vel.X) < 1 {
@@ -314,7 +314,7 @@ func (t *Dude) ApplyFriction() {
 }
 
 func (t *Dude) ApplyBearingFriction() {
-	t.bearing *= tuning.Instance.GetBearingFriction()
+	t.bearing *= tuning.Instance.Todd.GetBearingFriction()
 }
 
 func (t *Dude) Left() float32 {

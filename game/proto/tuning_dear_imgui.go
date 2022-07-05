@@ -5,249 +5,236 @@ import "github.com/inkyblackness/imgui-go/v4"
 
 var (
 	tmpFloat32 float32
+	tmpColor   = [3]float32{0, 0, 0}
 )
 
-func RenderColor(p *Color) {
-
-	{
-		tmpFloat32 = p.GetRed()
-		imgui.SliderFloat("Red", &tmpFloat32, 0, 0)
-		if p.Red == nil {
-			var f float32
-			p.Red = &f
-		}
-		*p.Red = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetGreen()
-		imgui.SliderFloat("Green", &tmpFloat32, 0, 0)
-		if p.Green == nil {
-			var f float32
-			p.Green = &f
-		}
-		*p.Green = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetBlue()
-		imgui.SliderFloat("Blue", &tmpFloat32, 0, 0)
-		if p.Blue == nil {
-			var f float32
-			p.Blue = &f
-		}
-		*p.Blue = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetAlpha()
-		imgui.SliderFloat("Alpha", &tmpFloat32, 0.5, 2)
-		if p.Alpha == nil {
-			var f float32
-			p.Alpha = &f
-		}
-		*p.Alpha = tmpFloat32
-	}
-}
 func RenderTuning(p *Tuning) {
+	if imgui.CollapsingHeader("World") {
 
-	{
-		tmpFloat32 = p.GetGravity()
-		imgui.SliderFloat("Gravity", &tmpFloat32, -2000, -100)
-		if p.Gravity == nil {
-			var f float32
-			p.Gravity = &f
+		{
+			tmpFloat32 = p.World.GetGravity()
+			imgui.SliderFloat("Gravity", &tmpFloat32, -2000, -100)
+			if p.World.Gravity == nil {
+				var f float32
+				p.World.Gravity = &f
+			}
+			*p.World.Gravity = tmpFloat32
 		}
-		*p.Gravity = tmpFloat32
+
+		{
+			if p.World.Bg == nil {
+				p.World.Bg = &Color{
+					C: []float32{0, 0, 0},
+				}
+			}
+			imgui.ColorEdit3("Bg", &tmpColor)
+			p.World.Bg.C = tmpColor[:]
+		}
 	}
+	if imgui.CollapsingHeader("Todd") {
 
-	{
-		tmpFloat32 = p.GetToddSideLength()
-		imgui.SliderFloat("ToddSideLength", &tmpFloat32, 15, 60)
-		if p.ToddSideLength == nil {
-			var f float32
-			p.ToddSideLength = &f
+		{
+			if p.Todd.Color == nil {
+				p.Todd.Color = &Color{
+					C: []float32{0, 0, 0},
+				}
+			}
+			imgui.ColorEdit3("Color", &tmpColor)
+			p.Todd.Color.C = tmpColor[:]
 		}
-		*p.ToddSideLength = tmpFloat32
+
+		{
+			tmpFloat32 = p.Todd.GetSideLength()
+			imgui.SliderFloat("SideLength", &tmpFloat32, 15, 60)
+			if p.Todd.SideLength == nil {
+				var f float32
+				p.Todd.SideLength = &f
+			}
+			*p.Todd.SideLength = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetFriction()
+			imgui.SliderFloat("Friction", &tmpFloat32, 0.9, 1)
+			if p.Todd.Friction == nil {
+				var f float32
+				p.Todd.Friction = &f
+			}
+			*p.Todd.Friction = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetBearingFriction()
+			imgui.SliderFloat("BearingFriction", &tmpFloat32, 0.9, 1)
+			if p.Todd.BearingFriction == nil {
+				var f float32
+				p.Todd.BearingFriction = &f
+			}
+			*p.Todd.BearingFriction = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetMaxVelocity()
+			imgui.SliderFloat("MaxVelocity", &tmpFloat32, 100, 350)
+			if p.Todd.MaxVelocity == nil {
+				var f float32
+				p.Todd.MaxVelocity = &f
+			}
+			*p.Todd.MaxVelocity = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetAcceleration()
+			imgui.SliderFloat("Acceleration", &tmpFloat32, 200, 2000)
+			if p.Todd.Acceleration == nil {
+				var f float32
+				p.Todd.Acceleration = &f
+			}
+			*p.Todd.Acceleration = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetAirBending()
+			imgui.SliderFloat("AirBending", &tmpFloat32, 200, 800)
+			if p.Todd.AirBending == nil {
+				var f float32
+				p.Todd.AirBending = &f
+			}
+			*p.Todd.AirBending = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetBearingAcceleration()
+			imgui.SliderFloat("BearingAcceleration", &tmpFloat32, 200, 2000)
+			if p.Todd.BearingAcceleration == nil {
+				var f float32
+				p.Todd.BearingAcceleration = &f
+			}
+			*p.Todd.BearingAcceleration = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetJumpImpulse()
+			imgui.SliderFloat("JumpImpulse", &tmpFloat32, 100, 800)
+			if p.Todd.JumpImpulse == nil {
+				var f float32
+				p.Todd.JumpImpulse = &f
+			}
+			*p.Todd.JumpImpulse = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetMaxSquishVelocity()
+			imgui.SliderFloat("MaxSquishVelocity", &tmpFloat32, 20, 120)
+			if p.Todd.MaxSquishVelocity == nil {
+				var f float32
+				p.Todd.MaxSquishVelocity = &f
+			}
+			*p.Todd.MaxSquishVelocity = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetJumpTerminalVelocity()
+			imgui.SliderFloat("JumpTerminalVelocity", &tmpFloat32, -600, -100)
+			if p.Todd.JumpTerminalVelocity == nil {
+				var f float32
+				p.Todd.JumpTerminalVelocity = &f
+			}
+			*p.Todd.JumpTerminalVelocity = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetTerminalVelocity()
+			imgui.SliderFloat("TerminalVelocity", &tmpFloat32, -1000, -100)
+			if p.Todd.TerminalVelocity == nil {
+				var f float32
+				p.Todd.TerminalVelocity = &f
+			}
+			*p.Todd.TerminalVelocity = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetEyeCenteringDurationSeconds()
+			imgui.SliderFloat("EyeCenteringDurationSeconds", &tmpFloat32, 0, 3)
+			if p.Todd.EyeCenteringDurationSeconds == nil {
+				var f float32
+				p.Todd.EyeCenteringDurationSeconds = &f
+			}
+			*p.Todd.EyeCenteringDurationSeconds = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetJumpStateGravityFactor()
+			imgui.SliderFloat("JumpStateGravityFactor", &tmpFloat32, 0.2, 1)
+			if p.Todd.JumpStateGravityFactor == nil {
+				var f float32
+				p.Todd.JumpStateGravityFactor = &f
+			}
+			*p.Todd.JumpStateGravityFactor = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetAirFriction()
+			imgui.SliderFloat("AirFriction", &tmpFloat32, 0.85, 1)
+			if p.Todd.AirFriction == nil {
+				var f float32
+				p.Todd.AirFriction = &f
+			}
+			*p.Todd.AirFriction = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetJumpRequestSlopSeconds()
+			imgui.SliderFloat("JumpRequestSlopSeconds", &tmpFloat32, 0, 0.5)
+			if p.Todd.JumpRequestSlopSeconds == nil {
+				var f float32
+				p.Todd.JumpRequestSlopSeconds = &f
+			}
+			*p.Todd.JumpRequestSlopSeconds = tmpFloat32
+		}
+
+		{
+			tmpFloat32 = p.Todd.GetGroundingSlopSeconds()
+			imgui.SliderFloat("GroundingSlopSeconds", &tmpFloat32, 0, 0.5)
+			if p.Todd.GroundingSlopSeconds == nil {
+				var f float32
+				p.Todd.GroundingSlopSeconds = &f
+			}
+			*p.Todd.GroundingSlopSeconds = tmpFloat32
+		}
+		if imgui.CollapsingHeader("Blink") {
+
+			{
+				tmpFloat32 = p.Todd.Blink.GetOdds()
+				imgui.SliderFloat("Odds", &tmpFloat32, 1e-05, 0.001)
+				if p.Todd.Blink.Odds == nil {
+					var f float32
+					p.Todd.Blink.Odds = &f
+				}
+				*p.Todd.Blink.Odds = tmpFloat32
+			}
+
+			{
+				tmpFloat32 = p.Todd.Blink.GetCycleSeconds()
+				imgui.SliderFloat("CycleSeconds", &tmpFloat32, 0, 2)
+				if p.Todd.Blink.CycleSeconds == nil {
+					var f float32
+					p.Todd.Blink.CycleSeconds = &f
+				}
+				*p.Todd.Blink.CycleSeconds = tmpFloat32
+			}
+		}
 	}
+	if imgui.CollapsingHeader("Camera") {
 
-	{
-		tmpFloat32 = p.GetFriction()
-		imgui.SliderFloat("Friction", &tmpFloat32, 0.9, 1)
-		if p.Friction == nil {
-			var f float32
-			p.Friction = &f
+		{
+			tmpFloat32 = p.Camera.GetTiltSeconds()
+			imgui.SliderFloat("TiltSeconds", &tmpFloat32, 0, 0.8)
+			if p.Camera.TiltSeconds == nil {
+				var f float32
+				p.Camera.TiltSeconds = &f
+			}
+			*p.Camera.TiltSeconds = tmpFloat32
 		}
-		*p.Friction = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetBearingFriction()
-		imgui.SliderFloat("BearingFriction", &tmpFloat32, 0.9, 1)
-		if p.BearingFriction == nil {
-			var f float32
-			p.BearingFriction = &f
-		}
-		*p.BearingFriction = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetMaxVelocity()
-		imgui.SliderFloat("MaxVelocity", &tmpFloat32, 100, 350)
-		if p.MaxVelocity == nil {
-			var f float32
-			p.MaxVelocity = &f
-		}
-		*p.MaxVelocity = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetAcceleration()
-		imgui.SliderFloat("Acceleration", &tmpFloat32, 200, 2000)
-		if p.Acceleration == nil {
-			var f float32
-			p.Acceleration = &f
-		}
-		*p.Acceleration = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetAirBending()
-		imgui.SliderFloat("AirBending", &tmpFloat32, 200, 800)
-		if p.AirBending == nil {
-			var f float32
-			p.AirBending = &f
-		}
-		*p.AirBending = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetBearingAcceleration()
-		imgui.SliderFloat("BearingAcceleration", &tmpFloat32, 200, 2000)
-		if p.BearingAcceleration == nil {
-			var f float32
-			p.BearingAcceleration = &f
-		}
-		*p.BearingAcceleration = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetJumpImpulse()
-		imgui.SliderFloat("JumpImpulse", &tmpFloat32, 100, 800)
-		if p.JumpImpulse == nil {
-			var f float32
-			p.JumpImpulse = &f
-		}
-		*p.JumpImpulse = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetMaxSquishVelocity()
-		imgui.SliderFloat("MaxSquishVelocity", &tmpFloat32, 20, 120)
-		if p.MaxSquishVelocity == nil {
-			var f float32
-			p.MaxSquishVelocity = &f
-		}
-		*p.MaxSquishVelocity = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetJumpTerminalVelocity()
-		imgui.SliderFloat("JumpTerminalVelocity", &tmpFloat32, -600, -100)
-		if p.JumpTerminalVelocity == nil {
-			var f float32
-			p.JumpTerminalVelocity = &f
-		}
-		*p.JumpTerminalVelocity = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetTerminalVelocity()
-		imgui.SliderFloat("TerminalVelocity", &tmpFloat32, -1000, -100)
-		if p.TerminalVelocity == nil {
-			var f float32
-			p.TerminalVelocity = &f
-		}
-		*p.TerminalVelocity = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetBlinkOdds()
-		imgui.SliderFloat("BlinkOdds", &tmpFloat32, 1e-05, 0.001)
-		if p.BlinkOdds == nil {
-			var f float32
-			p.BlinkOdds = &f
-		}
-		*p.BlinkOdds = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetBlinkCycleSeconds()
-		imgui.SliderFloat("BlinkCycleSeconds", &tmpFloat32, 0, 2)
-		if p.BlinkCycleSeconds == nil {
-			var f float32
-			p.BlinkCycleSeconds = &f
-		}
-		*p.BlinkCycleSeconds = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetEyeCenteringDurationSeconds()
-		imgui.SliderFloat("EyeCenteringDurationSeconds", &tmpFloat32, 0, 3)
-		if p.EyeCenteringDurationSeconds == nil {
-			var f float32
-			p.EyeCenteringDurationSeconds = &f
-		}
-		*p.EyeCenteringDurationSeconds = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetJumpStateGravityFactor()
-		imgui.SliderFloat("JumpStateGravityFactor", &tmpFloat32, 0.2, 1)
-		if p.JumpStateGravityFactor == nil {
-			var f float32
-			p.JumpStateGravityFactor = &f
-		}
-		*p.JumpStateGravityFactor = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetCameraTiltSeconds()
-		imgui.SliderFloat("CameraTiltSeconds", &tmpFloat32, 0, 0.8)
-		if p.CameraTiltSeconds == nil {
-			var f float32
-			p.CameraTiltSeconds = &f
-		}
-		*p.CameraTiltSeconds = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetJumpRequestSlopSeconds()
-		imgui.SliderFloat("JumpRequestSlopSeconds", &tmpFloat32, 0, 0.5)
-		if p.JumpRequestSlopSeconds == nil {
-			var f float32
-			p.JumpRequestSlopSeconds = &f
-		}
-		*p.JumpRequestSlopSeconds = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetGroundingSlopSeconds()
-		imgui.SliderFloat("GroundingSlopSeconds", &tmpFloat32, 0, 0.5)
-		if p.GroundingSlopSeconds == nil {
-			var f float32
-			p.GroundingSlopSeconds = &f
-		}
-		*p.GroundingSlopSeconds = tmpFloat32
-	}
-
-	{
-		tmpFloat32 = p.GetAirFriction()
-		imgui.SliderFloat("AirFriction", &tmpFloat32, 0.85, 1)
-		if p.AirFriction == nil {
-			var f float32
-			p.AirFriction = &f
-		}
-		*p.AirFriction = tmpFloat32
 	}
 }
