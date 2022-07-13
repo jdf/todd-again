@@ -34,10 +34,11 @@ func (g *toddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 }
 
 func (g *toddGame) Resize(w, h int) {
-	ar := float32(w) / float32(h)
+
+	ar := float32(w-tuning.UIWidth) / float32(h)
 	Camera = engine.NewCamera(
 		engine.NewRect(-200, -10, 200, 400.0/ar-10),
-		engine.NewRect(0, 0, w, h),
+		engine.NewRect(tuning.UIWidth, 0, w, h),
 		engine.FlipYAxis)
 	Camera.SetCenterX(Todd.pos.X)
 	g.ui.Resize(w, h)

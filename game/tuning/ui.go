@@ -2,6 +2,7 @@ package tuning
 
 import (
 	"flag"
+	"image"
 
 	"github.com/gabstv/ebiten-imgui/renderer"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -12,9 +13,14 @@ import (
 
 var showUI = flag.Bool("show-ui", false, "Show the UI")
 
+const (
+	UIWidth = 600
+)
+
 type UI struct {
 	mgr     *renderer.Manager
 	Showing bool
+	height  float32
 }
 
 func NewUI() *UI {
@@ -24,7 +30,8 @@ func NewUI() *UI {
 }
 
 func (ui *UI) Resize(w, h int) {
-	ui.mgr.SetDisplaySize(float32(w), float32(h))
+	ui.height = float32(h)
+	ui.mgr.SetDisplaySize(float32(w), ui.height)
 	imgui.CurrentIO().SetFontGlobalScale(2.5)
 }
 
@@ -36,6 +43,8 @@ func (ui *UI) UpdateInput(s *engine.UpdateState) {
 	}
 	ui.mgr.Update(float32(s.DeltaSeconds))
 	ui.mgr.BeginFrame()
+	imgui.SetNextWindowPos(imgui.Vec2{X: 0, Y: 0})
+	imgui.SetNextWindowSize(imgui.Vec2{X: float32(UIWidth), Y: ui.height})
 	imgui.Begin("Settings")
 	proto.RenderTuning(Instance)
 	imgui.End()
@@ -44,6 +53,11 @@ func (ui *UI) UpdateInput(s *engine.UpdateState) {
 
 func (ui *UI) Draw(screen *ebiten.Image, g *engine.Graphics) {
 	if *showUI {
+		screen.SubImage(
+			image.Rectangle{
+				image.Point{0, 0},
+				image.Point{UIWidth, int(ui.height)},
+			}).(*ebiten.Image).Fill(RGBA(Instance.World.GetBg()))
 		ui.mgr.Draw(screen)
 	}
 }

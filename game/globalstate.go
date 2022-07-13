@@ -12,9 +12,11 @@ import (
 	"github.com/mustafaturan/monoton/v3/sequencer"
 )
 
-const ToddMovementTopic = "todd.movement"
-const ToddVerticalLevelChanged = "todd.vertical.level.changed"
-const CameraVerticalLevelChangedHandlerKey = "camera.vertical.level.changed"
+const (
+	ToddMovementTopic                    = "todd.movement"
+	ToddVerticalLevelChanged             = "todd.vertical.level.changed"
+	CameraVerticalLevelChangedHandlerKey = "camera.vertical.level.changed"
+)
 
 var (
 	Bus         *bus.Bus
