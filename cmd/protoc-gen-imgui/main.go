@@ -95,8 +95,7 @@ func (g *generator) emitColor(f *protogen.Field) {
 				C: []float32{0,0,0},
 			}
 		}
-		imgui.ColorEdit3("{{.name}}", &tmpColor)
-		{{.path}}.{{.name}}.C = tmpColor[:]
+		imgui.ColorEdit3("{{.name}}", (*[3]float32)({{.path}}.{{.name}}.C))
 	}
 `
 

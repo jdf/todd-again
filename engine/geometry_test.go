@@ -67,7 +67,7 @@ func TestRotation(t *testing.T) {
 }
 
 func snapTenth(f float32) float32 {
-	return math.Round(f*10) / 10
+	return float32(math.Round(float64(f)*10) / 10)
 }
 
 func roundVec2(p *Vec2) *Vec2 {
@@ -176,7 +176,7 @@ func TestRotationAround(t *testing.T) {
 	}
 
 	r := NewRect(0, 0, 2, 1)
-	angle := -math.Pi / 2
+	angle := float32(-math.Pi / 2)
 	for _, tt := range []tc{
 		{Vec2{0, 0}, NewRect(0, 0, 1, -2)},
 		{Vec2{2, 1}, NewRect(1, 1, 2, 3)},

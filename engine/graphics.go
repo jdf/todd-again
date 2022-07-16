@@ -135,6 +135,14 @@ func (g *Graphics) DrawLine(img *ebiten.Image, x1, y1, x2, y2 float32) {
 	ebitenutil.DrawLine(img, x16, y16, x26, y26, g.color)
 }
 
+func (g *Graphics) DrawRectScreen(img *ebiten.Image, left, top, right, bottom int) {
+	img.SubImage(
+		image.Rectangle{
+			image.Point{left, top},
+			image.Point{right, bottom},
+		}).(*ebiten.Image).Fill(g.color)
+}
+
 func (g *Graphics) DrawRect(img *ebiten.Image, r *Rect) {
 	sr := g.ToPixelRect(r)
 	path := &vector.Path{}

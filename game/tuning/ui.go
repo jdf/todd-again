@@ -2,7 +2,7 @@ package tuning
 
 import (
 	"flag"
-	"image"
+	"image/color"
 
 	"github.com/gabstv/ebiten-imgui/renderer"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -53,11 +53,8 @@ func (ui *UI) UpdateInput(s *engine.UpdateState) {
 
 func (ui *UI) Draw(screen *ebiten.Image, g *engine.Graphics) {
 	if *showUI {
-		screen.SubImage(
-			image.Rectangle{
-				image.Point{0, 0},
-				image.Point{UIWidth, int(ui.height)},
-			}).(*ebiten.Image).Fill(RGBA(Instance.World.GetBg()))
+		g.SetColor(color.Black)
+		g.DrawRectScreen(screen, 0, 0, UIWidth, int(ui.height))
 		ui.mgr.Draw(screen)
 	}
 }

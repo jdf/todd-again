@@ -24,7 +24,6 @@ var (
 
 type Dude struct {
 	sideLength float32
-	fillColor  color.Color
 	// Todd's bottom-center.
 	pos engine.Vec2
 	vel engine.Vec2
@@ -229,6 +228,7 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 	xsquish := t.vSquish * 0.8
 	ysquish := t.vSquish * 1.6
 
+	fillColor := tuning.RGBA(tuning.Instance.Todd.GetColor())
 	g.Push()
 	if t.tumbleAnimation != nil {
 		g.RotateAround(t.tumbleAnimation.AngleFor(y), engine.Vec(0, half))
@@ -236,7 +236,7 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 	g.Translate(x, y)
 	width := s - xsquish
 	height := s + ysquish
-	g.SetColor(t.fillColor)
+	g.SetColor(fillColor)
 	g.DrawRoundedRect(img, engine.NewRect(-width/2, 0, width/2, height), s/8)
 
 	if debugTodd {
@@ -266,7 +266,7 @@ func (t *Dude) Draw(img *ebiten.Image, g *engine.Graphics) {
 		blinkCycle := t.blinkCumulativeTime / tuning.Instance.Todd.Blink.GetCycleSeconds()
 		lidTop := eyePos.Y + 6
 		lidBottom := lidTop - 12*math32.Sin(math.Pi*blinkCycle)
-		g.SetColor(t.fillColor)
+		g.SetColor(fillColor)
 		g.DrawRect(img, engine.NewRect(-half+1, lidBottom, half-1, lidTop))
 	}
 

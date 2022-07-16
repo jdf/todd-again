@@ -27,8 +27,7 @@ func RenderTuning(p *Tuning) {
 					C: []float32{0, 0, 0},
 				}
 			}
-			imgui.ColorEdit3("Bg", &tmpColor)
-			p.World.Bg.C = tmpColor[:]
+			imgui.ColorEdit3("Bg", (*[3]float32)(p.World.Bg.C))
 		}
 	}
 	if imgui.CollapsingHeaderV("Todd", imgui.TreeNodeFlagsDefaultOpen) {
@@ -39,8 +38,7 @@ func RenderTuning(p *Tuning) {
 					C: []float32{0, 0, 0},
 				}
 			}
-			imgui.ColorEdit3("Color", &tmpColor)
-			p.Todd.Color.C = tmpColor[:]
+			imgui.ColorEdit3("Color", (*[3]float32)(p.Todd.Color.C))
 		}
 
 		{
