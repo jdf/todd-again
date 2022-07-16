@@ -1,4 +1,4 @@
-package tuning
+package level
 
 import (
 	"flag"
@@ -11,7 +11,7 @@ import (
 	"github.com/jdf/todd-again/game/proto"
 )
 
-var showUI = flag.Bool("show-ui", false, "Show the UI")
+var showUI = flag.Bool("show-ui", true, "Show the UI")
 
 const (
 	UIWidth = 600

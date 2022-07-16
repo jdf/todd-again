@@ -3,7 +3,7 @@ package game
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
-	"github.com/jdf/todd-again/game/tuning"
+	"github.com/jdf/todd-again/game/level"
 	"github.com/tanema/gween"
 )
 
@@ -14,17 +14,17 @@ var (
 const DebugWorld = true
 
 type toddGame struct {
-	ui *tuning.UI
+	ui *level.UI
 }
 
 func NewToddGame() engine.GameModule {
 	return &toddGame{
-		ui: tuning.NewUI(),
+		ui: level.NewUI(),
 	}
 }
 
 func (g *toddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
-	img.Fill(tuning.RGBA(tuning.Instance.World.GetBg()))
+	img.Fill(level.RGBA(level.Instance.World.GetBg()))
 	ctx.SetWorldToScreen(Camera.GetTransform())
 	for _, plat := range Platforms {
 		plat.Draw(img, ctx)
@@ -35,10 +35,10 @@ func (g *toddGame) Draw(img *ebiten.Image, ctx *engine.Graphics) {
 
 func (g *toddGame) Resize(w, h int) {
 
-	ar := float32(w-tuning.UIWidth) / float32(h)
+	ar := float32(w-level.UIWidth) / float32(h)
 	Camera = engine.NewCamera(
 		engine.NewRect(-200, -10, 200, 400.0/ar-10),
-		engine.NewRect(tuning.UIWidth, 0, w, h),
+		engine.NewRect(level.UIWidth, 0, w, h),
 		engine.FlipYAxis)
 	Camera.SetCenterX(Todd.pos.X)
 	g.ui.Resize(w, h)
@@ -55,8 +55,8 @@ func AnimateCameraVertical() {
 	CameraVerticalAnimation = gween.New(
 		float32(b.Bottom()),
 		float32(target),
-		float32(tuning.Instance.Camera.GetTiltSeconds()),
-		tuning.CameraTiltEasing)
+		float32(level.Instance.Camera.GetTiltSeconds()),
+		level.CameraTiltEasing)
 }
 
 func ControlCamera(s *engine.UpdateState) {

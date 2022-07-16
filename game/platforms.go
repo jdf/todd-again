@@ -6,7 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jdf/todd-again/engine"
-	"github.com/jdf/todd-again/game/tuning"
+	"github.com/jdf/todd-again/game/level"
 )
 
 var (
@@ -44,7 +44,7 @@ func (platform *Platform) Draw(img *ebiten.Image, g *engine.Graphics) {
 	g.SetColor(platform.color)
 	g.DrawRoundedRect(img, b, 5)
 	if DebugPlatforms {
-		margin := tuning.PlatformMargin(Todd.vel.X)
+		margin := level.PlatformMargin(Todd.vel.X)
 		g.SetColor(color.RGBA{0, 255, 0, 255})
 		g.DrawLine(img, b.Left()-margin, b.Top(), b.Right()+margin, b.Top())
 	}

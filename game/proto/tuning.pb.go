@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.0
 // 	protoc        v3.19.4
-// source: tuning.proto
+// source: level.proto
 
 package proto
 
@@ -107,7 +107,7 @@ func (x *Tuning) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Tuning.ProtoReflect.Descriptor instead.
+// Deprecated: Use level.ProtoReflect.Descriptor instead.
 func (*Tuning) Descriptor() ([]byte, []int) {
 	return file_tuning_proto_rawDescGZIP(), []int{1}
 }
@@ -523,7 +523,7 @@ var file_tuning_proto_extTypes = []protoimpl.ExtensionInfo{
 		Field:         50000,
 		Name:          "game.top_level",
 		Tag:           "varint,50000,opt,name=top_level",
-		Filename:      "tuning.proto",
+		Filename:      "level.proto",
 	},
 	{
 		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
@@ -531,7 +531,7 @@ var file_tuning_proto_extTypes = []protoimpl.ExtensionInfo{
 		Field:         50000,
 		Name:          "game.min",
 		Tag:           "fixed32,50000,opt,name=min",
-		Filename:      "tuning.proto",
+		Filename:      "level.proto",
 	},
 	{
 		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
@@ -539,7 +539,7 @@ var file_tuning_proto_extTypes = []protoimpl.ExtensionInfo{
 		Field:         50001,
 		Name:          "game.max",
 		Tag:           "fixed32,50001,opt,name=max",
-		Filename:      "tuning.proto",
+		Filename:      "level.proto",
 	},
 }
 
@@ -698,9 +698,9 @@ var file_tuning_proto_goTypes = []interface{}{
 	(*descriptorpb.FieldOptions)(nil),   // 7: google.protobuf.FieldOptions
 }
 var file_tuning_proto_depIdxs = []int32{
-	3, // 0: game.Tuning.world:type_name -> game.World
-	5, // 1: game.Tuning.todd:type_name -> game.Todd
-	2, // 2: game.Tuning.camera:type_name -> game.Camera
+	3, // 0: game.level.world:type_name -> game.World
+	5, // 1: game.level.todd:type_name -> game.Todd
+	2, // 2: game.level.camera:type_name -> game.Camera
 	0, // 3: game.World.bg:type_name -> game.Color
 	0, // 4: game.Todd.color:type_name -> game.Color
 	4, // 5: game.Todd.blink:type_name -> game.Blink
